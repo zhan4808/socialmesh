@@ -1,0 +1,111 @@
+{
+  "success": true,
+  "profile": {
+    "name": "Alexander Lan",
+    "linkedinId": "alexanderlan",
+    "url": "https://www.linkedin.com/in/alexanderlan/",
+    "imageUrl": "https://media.licdn.com/dms/image/v2/D4E03AQGDJMiXHgYQcg/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1704708909378?e=1749686400&v=beta&t=LWEO6RK6wjDRLefig1cTIa4-lQEDEJ9E_OIQWUZ9nEk",
+    "isAlumni": false,
+    "eloRating": 1200,
+    "experiences": [
+      {
+        "title": "Machine Learning Research Intern",
+        "companyName": "d-Matrix",
+        "location": "",
+        "description": "",
+        "startDate": "May 2024",
+        "endDate": "",
+        "isCurrent": true
+      },
+      {
+        "title": "Principal of Wing VC Team",
+        "companyName": "Yale Undergraduate Capital Partners",
+        "location": "",
+        "description": "",
+        "startDate": "Jan 2025",
+        "endDate": "",
+        "isCurrent": true
+      },
+      {
+        "title": "Bioinformatics Research Intern",
+        "companyName": "Gladstone Institutes",
+        "location": "",
+        "description": "",
+        "startDate": "Jun 2021",
+        "endDate": "Sep 2023",
+        "isCurrent": false
+      },
+      {
+        "title": "Curator of Peruvian Cuisine",
+        "companyName": "La Mar Cebicheria Peruana SF",
+        "location": "",
+        "description": "",
+        "startDate": "Jun 2022",
+        "endDate": "Apr 2023",
+        "isCurrent": false
+      }
+    ],
+    "educations": [
+      {
+        "school": "Yale University",
+        "degree": "BS",
+        "fieldOfStudy": "Computer Science and Molecular Biophysics & Biochemistry",
+        "description": "Relevant Coursework: Systems Programming, Operating Systems, NLP, Algorithms, Organic Chemistry I & II, Biochemistry I & II, Discrete Math, Global Financial Crisis, Graphic Design",
+        "startDate": "2023",
+        "endDate": "2026",
+        "isCurrent": false
+      },
+      {
+        "school": "The Harker School",
+        "degree": "High School Diploma",
+        "description": "",
+        "fieldOfStudy": "",
+        "startDate": "2014",
+        "endDate": "2023",
+        "isCurrent": false
+      },
+      {
+        "school": "Hillhouse Fellows",
+        "degree": "",
+        "description": "",
+        "fieldOfStudy": "",
+        "startDate": "",
+        "endDate": "",
+        "isCurrent": false
+      }
+    ],
+    "projects": [
+      {
+        "title": "Designing and Implementing Novel Convolutional and Twin Neural Network Architectures to Decipher the Functional Impact of Noncoding Genetic Variants in Alzheimer’s Disease", 
+        "description": "Developed novel convolutional and twin neural networks to provide new avenues for modeling the cis-regulatory code of brain cells, identify candidate causal variants for AD, and evaluate the role of noncoding variation in disease.",
+        "startDate": "Jun 2021", 
+        "endDate": "Sep 2023",
+        "url": "",
+        "skills": "",
+        "contributors": ""
+      },
+      {
+        "title": "An Audiovisual Emotion Classification Platform Powered By Deep Neural Networks and Optimized for Individuals with Autism Spectrum Disorder", 
+        "description": "Developed deep neural networks (ResNet, ConvLSTM) to recognize emotions from audiovisual input modalities. Integrated models with Zoom to assist individuals with autism in everyday social interactions.",
+        "startDate": "Oct 2019", 
+        "endDate": "May 2021",
+        "url": "",
+        "skills": "",
+        "contributors": ""
+      }
+    ],
+    "honors": [
+      {
+        "title": "Neo Accelerator Prize 2025, Y Combinator Prize 2024",
+        "issuer": "Issued by Stanford TreeHacks",
+        "date": "Feb 2025"
+      },
+      {
+        "title": "Regeneron Science Talent Search (STS) Scholar",
+        "issuer": "Issued by Society for Science",
+        "date": "Jan 2023"
+      }
+    ]
+  },
+  "message": null
+}

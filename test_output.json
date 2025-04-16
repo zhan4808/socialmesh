@@ -1,0 +1,133 @@
+{
+    "success": true,
+    "profile": {
+        "name": "Johnathan Mo",
+        "linkedinId": "johnathan-mo",
+        "url": "https://www.linkedin.com/in/johnathan-mo/",
+        "imageUrl": "https://media.licdn.com/dms/image/v2/D5603AQEoI1fiAonjRQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1730688386273?e=1749686400&v=beta&t=iNnPtKKD7FdzI9qVnbU2cepKM1xA8QBpHA2RFq9qD60",
+        "isAlumni": false,
+        "eloRating": 1200,
+        "experiences": [
+            {
+                "title": "Incoming SWE Intern",
+                "companyName": "Google",
+                "location": "",
+                "description": "",
+                "skills": "",
+                "media": "",
+                "startDate": "Mar 2025",
+                "endDate": "",
+                "isCurrent": true
+            },
+            {
+                "title": "Research Assistant @ CGUI Lab",
+                "companyName": "Columbia University",
+                "location": "",
+                "description": "",
+                "skills": "",
+                "media": "",
+                "startDate": "Sep 2024",
+                "endDate": "",
+                "isCurrent": true
+            },
+            {
+                "title": "SWE Intern @ Mayah Design",
+                "companyName": "Columbia Build Lab",
+                "location": "",
+                "description": "",
+                "skills": "",
+                "media": "",
+                "startDate": "Sep 2024",
+                "endDate": "",
+                "isCurrent": true
+            },
+            {
+                "title": "",
+                "companyName": "V1 @ Michigan",
+                "location": "",
+                "description": "",
+                "skills": "",
+                "media": "",
+                "startDate": "Sep 2023",
+                "endDate": "",
+                "isCurrent": true
+            },
+            {
+                "title": "BESIP Summer Intern",
+                "companyName": "The National Institutes of Health",
+                "location": "",
+                "description": "",
+                "skills": "",
+                "media": "",
+                "startDate": "Jun 2024",
+                "endDate": "",
+                "isCurrent": true
+            },
+            {
+                "title": "ELP Fellow",
+                "companyName": "Entrepreneurs Leadership Program",
+                "location": "",
+                "description": "",
+                "skills": "",
+                "media": "",
+                "startDate": "Nov 2023",
+                "endDate": "Jun 2024",
+                "isCurrent": false
+            },
+            {
+                "title": "Research Assistant @ Cai Lab",
+                "companyName": "Michigan Medicine",
+                "location": "",
+                "description": "",
+                "skills": "",
+                "media": "",
+                "startDate": "Sep 2023",
+                "endDate": "Jun 2024",
+                "isCurrent": false
+            }
+        ],
+        "educations": [
+            {
+                "school": "Columbia University",
+                "degree": "Bachelor of Engineering - BE",
+                "fieldOfStudy": "Computer Science",
+                "description": "",
+                "grade": "3.85",
+                "activities": "TASA",
+                "skills": "Git, C++",
+                "media": "",
+                "startDate": "2024",
+                "endDate": "2026",
+                "isCurrent": false
+            },
+            {
+                "school": "University of Michigan",
+                "degree": "Bachelor of Engineering - BE\nBachelor of Engineering - BE",
+                "fieldOfStudy": "",
+                "description": "",
+                "grade": "4.00/4.00",
+                "activities": "Michigan Research and Discovery Scholars (MRADS), Entrepreneurial Leadership Program (ELP), V1 Tech Entrepreneurship (Core Team), Shift Creator Space, MedLaunch",
+                "skills": "Git",
+                "media": "",
+                "startDate": "Jun 2023",
+                "endDate": "May 2024",
+                "isCurrent": false
+            },
+            {
+                "school": "The Harker School",
+                "degree": "",
+                "fieldOfStudy": "",
+                "description": "",
+                "grade": "",
+                "activities": "Jazz Band, Lab Band, DECA, Varsity Swim Team, Public Health Co-President, Medical Club Co-President, National Honor Society, HOSA",
+                "skills": "",
+                "media": "",
+                "startDate": "2016",
+                "endDate": "2023",
+                "isCurrent": false
+            }
+        ],
+        "projects": [],
+        "honors_awards": []
+    }
+} 

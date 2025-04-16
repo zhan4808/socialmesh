@@ -1,0 +1,256 @@
+{
+  "success": true,
+  "profile": {
+    "name": "Johnathan Mo",
+    "linkedinId": "johnathan-mo",
+    "url": "https://www.linkedin.com/in/johnathan-mo/",
+    "imageUrl": "https://media.licdn.com/dms/image/v2/D5603AQEoI1fiAonjRQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1730688386273?e=1749686400&v=beta&t=iNnPtKKD7FdzI9qVnbU2cepKM1xA8QBpHA2RFq9qD60",
+    "isAlumni": false,
+    "eloRating": 1200,
+    "experiences": [
+      {
+        "title": "Incoming SWE Intern",
+        "companyName": "Google",
+        "location": "",
+        "description": "",
+        "skills": "",
+        "media": "",
+        "startDate": "Mar 2025",
+        "endDate": "",
+        "isCurrent": true
+      },
+      {
+        "title": "Research Assistant @ CGUI Lab",
+        "companyName": "Columbia University",
+        "location": "",
+        "description": "",
+        "skills": "",
+        "media": "",
+        "startDate": "Sep 2024",
+        "endDate": "",
+        "isCurrent": true
+      },
+      {
+        "title": "SWE Intern @ Mayah Design",
+        "companyName": "Columbia Build Lab",
+        "location": "",
+        "description": "",
+        "skills": "",
+        "media": "",
+        "startDate": "Sep 2024",
+        "endDate": "",
+        "isCurrent": true
+      },
+      {
+        "title": "",
+        "companyName": "V1 @ Michigan",
+        "location": "",
+        "description": "",
+        "skills": "",
+        "media": "",
+        "startDate": "Sep 2023",
+        "endDate": "",
+        "isCurrent": true
+      },
+      {
+        "title": "BESIP Summer Intern",
+        "companyName": "The National Institutes of Health",
+        "location": "",
+        "description": "",
+        "skills": "",
+        "media": "",
+        "startDate": "Jun 2024",
+        "endDate": "",
+        "isCurrent": true
+      },
+      {
+        "title": "ELP Fellow",
+        "companyName": "Entrepreneurs Leadership Program",
+        "location": "",
+        "description": "",
+        "skills": "",
+        "media": "",
+        "startDate": "Nov 2023",
+        "endDate": "Jun 2024",
+        "isCurrent": false
+      },
+      {
+        "title": "Research Assistant @ Cai Lab",
+        "companyName": "Michigan Medicine",
+        "location": "",
+        "description": "",
+        "skills": "",
+        "media": "",
+        "startDate": "Sep 2023",
+        "endDate": "Jun 2024",
+        "isCurrent": false
+      },
+      {
+        "title": "3D Animator and Video Editor",
+        "companyName": "MagIC Lifescience",
+        "location": "",
+        "description": "",
+        "skills": "",
+        "media": "",
+        "startDate": "Aug 2022",
+        "endDate": "Jun 2024",
+        "isCurrent": false
+      },
+      {
+        "title": "Founder",
+        "companyName": "Equal Access Robotics",
+        "location": "",
+        "description": "",
+        "skills": "",
+        "media": "",
+        "startDate": "Nov 2020",
+        "endDate": "Jun 2024",
+        "isCurrent": false
+      },
+      {
+        "title": "Research Intern @ Stanford Optima Group",
+        "companyName": "Stanford University",
+        "location": "",
+        "description": "",
+        "skills": "",
+        "media": "",
+        "startDate": "May 2023",
+        "endDate": "Aug 2023",
+        "isCurrent": false
+      },
+      {
+        "title": "SIMR Bioengineering Intern",
+        "companyName": "Stanford University School of Medicine",
+        "location": "",
+        "description": "",
+        "skills": "",
+        "media": "",
+        "startDate": "Jun 2022",
+        "endDate": "Aug 2022",
+        "isCurrent": false
+      },
+      {
+        "title": "SSI Scholar",
+        "companyName": "Summer STEM Institute (SSI)",
+        "location": "",
+        "description": "",
+        "skills": "",
+        "media": "",
+        "startDate": "Jun 2021",
+        "endDate": "Jul 2021",
+        "isCurrent": false
+      }
+    ],
+    "educations": [
+      {
+        "school": "Columbia University",
+        "degree": "Bachelor of Engineering - BE",
+        "fieldOfStudy": "Computer Science",
+        "description": "",
+        "grade": "3.85",
+        "activities": "TASA",
+        "skills": "Git, C++",
+        "media": "",
+        "startDate": "2024",
+        "endDate": "2026",
+        "isCurrent": false
+      },
+      {
+        "school": "University of Michigan",
+        "degree": "Bachelor of Engineering - BE\nBachelor of Engineering - BE",
+        "fieldOfStudy": "",
+        "description": "",
+        "grade": "4.00/4.00",
+        "activities": "Michigan Research and Discovery Scholars (MRADS), Entrepreneurial Leadership Program (ELP), V1 Tech Entrepreneurship (Core Team), Shift Creator Space, MedLaunch",
+        "skills": "Git",
+        "media": "",
+        "startDate": "Jun 2023",
+        "endDate": "May 2024",
+        "isCurrent": false
+      },
+      {
+        "school": "The Harker School",
+        "degree": "",
+        "fieldOfStudy": "",
+        "description": "",
+        "grade": "",
+        "activities": "Jazz Band, Lab Band, DECA, Varsity Swim Team, Public Health Co-President, Medical Club Co-President, National Honor Society, HOSA",
+        "skills": "",
+        "media": "",
+        "startDate": "2016",
+        "endDate": "2023",
+        "isCurrent": false
+      },
+      {
+        "school": "Yale Young Global Scholars",
+        "degree": "Activities and societies: Solving Global Challenges",
+        "fieldOfStudy": "",
+        "description": "",
+        "grade": "",
+        "activities": "",
+        "skills": "",
+        "media": "",
+        "startDate": "Jul 2021",
+        "endDate": "Jul 2021",
+        "isCurrent": false
+      },
+      {
+        "school": "UCLA",
+        "degree": "UCLA Sci - Art Summer Program",
+        "fieldOfStudy": "",
+        "description": "Presented on hypothetical advanced prosthetics",
+        "grade": "",
+        "activities": "",
+        "skills": "",
+        "media": "",
+        "startDate": "2020",
+        "endDate": "2020",
+        "isCurrent": false
+      },
+    ],
+    "projects": [
+      {
+        "title": "Manu.AI",
+        "description": "Superpowering user manuals using AI. Built with NextJs, FastAPI, Supabase, and Amazon S3.",
+        "skills": "Git",
+        "contributors": "",
+        "association": "V1 Michigan",
+        "media": "https://www.linkedin.com/in/johnathan-mo/overlay/1705372310040/single-media-viewer?type=LINK&profileId=ACoAACmJx4kBT7v80m9h1SjqwFnLGGhbZRBAkb0&lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base%3BL0IPxonYSMyw6Nz5OxdRZw%3D%3D",
+        "startDate": "Sep 2023",
+        "endDate": ""
+      },
+      {
+        "title": "HUGS: a Discreet, Electrically-Activated Compression Band for Anxiety Disorder Alleviation",
+        "description": "",
+        "skills": "Arduino IDE, Soldering, Git, Computer-Aided Design (CAD), Arduino",
+        "association": "The Harker School",
+        "media": "https://www.linkedin.com/in/johnathan-mo/overlay/1635540519154/single-media-viewer?type=DOCUMENT&profileId=ACoAACmJx4kBT7v80m9h1SjqwFnLGGhbZRBAkb0&lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base%3B0ksF83YxTCC4EdiCECoHDg%3D%3D",
+        "contributors": "https://www.linkedin.com/in/johnathan-mo/overlay/urn:li:fsd_profileProject:(ACoAACmJx4kBT7v80m9h1SjqwFnLGGhbZRBAkb0,214583487)/creators?profileUrn=urn%3Ali%3Afsd_profile%3AACoAACmJx4kBT7v80m9h1SjqwFnLGGhbZRBAkb0&lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base%3B0ksF83YxTCC4EdiCECoHDg%3D%3D",
+        "startDate": "Aug 2022",
+        "endDate": "Apr 2023"
+      },
+      {
+        "title": "Using GANs and CNNs to More Accurately Diagnose Skin Conditions on Diverse Skin Types",
+        "description": "4th at CSEF",
+        "skills": "",
+        "association": "The Harker School",
+        "media": "https://www.linkedin.com/in/johnathan-mo/details/projects/1635540518310/single-media-viewer?type=DOCUMENT&profileId=ACoAACmJx4kBT7v80m9h1SjqwFnLGGhbZRBAkb0&lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_projects_details%3B3ZiCJJQvTAGIrRHFPgkWOQ%3D%3D",
+        "contributors": "",
+        "startDate": "Aug 2021",
+        "endDate": "Apr 2022"
+      },
+      {
+        "title": "PPE For Hospital Workers and Masks For Low Income Families",
+        "description": "I worked alongside my robotics team to 3D print face shields for hospital workers and distribute masks to low-income families",
+        "skills": "",
+        "association": "",
+        "media": "https://www.gofundme.com/manage/DonateApollo",
+        "contributors": "",
+        "startDate": "",
+        "endDate": ""
+      },
+    ],
+    "honors": []
+  },
+  "message": null
+}

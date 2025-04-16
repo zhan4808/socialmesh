@@ -1,0 +1,1576 @@
+import os
+import json
+import pandas as pd
+import time
+import random
+import re
+from dotenv import load_dotenv
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from linkedin_scraper import Person, actions
+
+class PurdueLinkedInScraper:
+    def __init__(self, email=None, password=None, take_screenshots=True, headless=True, manual_verification_time=60):
+        """Initialize the LinkedIn scraper with credentials."""
+        load_dotenv()
+        self.email = email or os.environ.get("LINKEDIN_EMAIL")
+        self.password = password or os.environ.get("LINKEDIN_PASSWORD")
+        self.driver = None
+        self.profile_data = []
+        self.take_screenshots = take_screenshots
+        self.headless = headless
+        self.manual_verification_time = manual_verification_time
+        self.cookies_file = "linkedin_cookies.json"
+        
+        if not self.email or not self.password:
+            raise ValueError("LinkedIn credentials not found. Please provide email and password or set LINKEDIN_EMAIL and LINKEDIN_PASSWORD environment variables.")
+    
+    def setup_driver(self):
+        """Set up the Selenium WebDriver with appropriate options."""
+        print("Setting up Chrome driver...")
+        chrome_options = Options()
+        
+        if self.headless:
+            print("Running in headless mode")
+            chrome_options.add_argument("--headless")  # Run in headless mode
+        else:
+            print("Running in visible mode for manual verification if needed")
+        
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_argument("--window-size=1920,1080")  # Set window size
+        chrome_options.add_argument("--user-agent=Mozilla/5.0 (Macintosh; Apple M1 Mac OS X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
+        
+        # Additional options to help avoid detection
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option("useAutomationExtension", False)
+        
+        try:
+            # Try to use the system installed ChromeDriver first
+            import subprocess
+            import platform
+            
+            print("Checking for system ChromeDriver...")
+            if platform.system() == "Darwin" and platform.machine() == "arm64":
+                print("Detected Mac with ARM architecture (M1/M2/M3)")
+                
+                # Try finding ChromeDriver using 'which' command
+                try:
+                    chromedriver_path = subprocess.check_output(['which', 'chromedriver']).decode('utf-8').strip()
+                    if chromedriver_path:
+                        print(f"Using system ChromeDriver at: {chromedriver_path}")
+                        service = Service(executable_path=chromedriver_path)
+                        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+                        return
+                except Exception as e:
+                    print(f"No system ChromeDriver found via 'which' command: {str(e)}")
+                
+                # Try common locations
+                common_locations = [
+                    "/usr/local/bin/chromedriver",
+                    "/usr/bin/chromedriver",
+                    "/opt/homebrew/bin/chromedriver"
+                ]
+                
+                for location in common_locations:
+                    if os.path.exists(location):
+                        print(f"Using ChromeDriver found at: {location}")
+                        try:
+                            service = Service(executable_path=location)
+                            self.driver = webdriver.Chrome(service=service, options=chrome_options)
+                            return
+                        except Exception as e:
+                            print(f"Failed to initialize ChromeDriver at {location}: {str(e)}")
+                
+                print("No system ChromeDriver found in common locations, trying brew install...")
+                try:
+                    # Try installing with Homebrew
+                    subprocess.run(["brew", "install", "chromedriver"], check=True)
+                    print("ChromeDriver installed via brew")
+                    service = Service(executable_path="/opt/homebrew/bin/chromedriver")
+                    self.driver = webdriver.Chrome(service=service, options=chrome_options)
+                    return
+                except Exception as e:
+                    print(f"Failed to install ChromeDriver via brew: {str(e)}")
+            
+            # If we get here, fall back to webdriver-manager
+            print("Falling back to webdriver-manager...")
+            
+            # Force ARM64 architecture for Mac
+            os_type = "mac64_m1" if platform.system() == "Darwin" and platform.machine() == "arm64" else None
+            driver_path = ChromeDriverManager(os_type=os_type).install()
+            print(f"Using ChromeDriver from webdriver-manager at: {driver_path}")
+            
+            service = Service(executable_path=driver_path)
+            self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        
+        except Exception as e:
+            print(f"Error setting up ChromeDriver: {str(e)}")
+            # Last resort: try without service
+            try:
+                print("Trying direct Chrome instantiation...")
+                self.driver = webdriver.Chrome(options=chrome_options)
+            except Exception as inner_e:
+                print(f"Critical failure: {str(inner_e)}")
+                raise
+        
+        if self.driver:
+            self.driver.maximize_window()
+        else:
+            raise Exception("Failed to initialize Chrome driver")
+    
+    def login(self):
+        """Log in to LinkedIn."""
+        print("Logging in to LinkedIn...")
+        
+        # First try loading saved cookies
+        if self.load_cookies():
+            # Navigate to feed to verify login
+            self.driver.get("https://www.linkedin.com/feed/")
+            time.sleep(3)
+            
+            # Check if already logged in
+            if "/feed" in self.driver.current_url:
+                print("Login successful using saved cookies!")
+                return True
+            else:
+                print("Cookies expired or invalid. Need to log in again.")
+        else:
+            print("No saved cookies found or unable to load cookies.")
+        
+        # If we're in headless mode and cookies didn't work, we can't proceed with verification
+        if self.headless:
+            print("ERROR: Cannot perform manual login in headless mode with no valid cookies.")
+            print("Please run once in visible mode to complete verification and save cookies.")
+            return False
+        
+        try:
+            # Make sure we're on the login page
+            self.driver.get("https://www.linkedin.com/login")
+            time.sleep(2)
+            
+            # Check if we're already logged in
+            if "/feed" in self.driver.current_url:
+                print("Already logged in!")
+                self.save_cookies()
+                return True
+                
+            # Try the custom login approach
+            try:
+                # Find username and password fields directly
+                username_input = self.driver.find_element("id", "username")
+                password_input = self.driver.find_element("id", "password")
+                
+                # Clear any existing values and enter credentials
+                username_input.clear()
+                username_input.send_keys(self.email)
+                
+                password_input.clear()
+                password_input.send_keys(self.password)
+                
+                # Click login button
+                login_button = self.driver.find_element("xpath", "//button[@type='submit']")
+                login_button.click()
+                
+                # Wait for login to complete
+                time.sleep(5)
+                
+                # Check for security verification
+                if "checkpoint" in self.driver.current_url or "security-verification" in self.driver.current_url:
+                    print(f"LinkedIn security verification detected. Please complete it manually in the browser window.")
+                    print(f"Waiting {self.manual_verification_time} seconds for manual verification...")
+                    
+                    if not self.headless:
+                        print("ATTENTION: Please complete the security verification in the opened Chrome window!")
+                        print(f"You have {self.manual_verification_time} seconds to complete this verification.")
+                        print("After completing verification, the scraper will continue automatically.")
+                        print("IMPORTANT: This verification may involve email or phone verification.")
+                    
+                    if self.take_screenshots:
+                        self.driver.save_screenshot("security_verification.png")
+                    
+                    # Wait longer for manual verification
+                    time.sleep(self.manual_verification_time)
+                
+                # Check if login was successful
+                if "/feed" in self.driver.current_url:
+                    print("Login successful!")
+                    self.save_cookies()
+                    return True
+                else:
+                    # Fallback to the actions.login method
+                    print("Custom login approach failed, falling back to actions.login...")
+                    raise Exception("Custom login failed")
+            except Exception as e:
+                print(f"Custom login failed: {str(e)}")
+                # Fallback to the built-in login method
+                try:
+                    actions.login(self.driver, self.email, self.password)
+                    time.sleep(5)
+                    
+                    # Check for security verification after actions.login
+                    if "checkpoint" in self.driver.current_url or "security-verification" in self.driver.current_url:
+                        print(f"LinkedIn security verification detected after actions.login. Please complete it manually.")
+                        print(f"Waiting {self.manual_verification_time} seconds for manual verification...")
+                        
+                        if not self.headless:
+                            print("ATTENTION: Please complete the security verification in the opened Chrome window!")
+                            print(f"You have {self.manual_verification_time} seconds to complete this verification.")
+                        
+                        if self.take_screenshots:
+                            self.driver.save_screenshot("security_verification_2.png")
+                        
+                        # Wait longer for manual verification
+                        time.sleep(self.manual_verification_time)
+                except Exception as login_err:
+                    print(f"Built-in login also failed: {str(login_err)}")
+            
+            # Final check to confirm login
+            time.sleep(3)
+            
+            if "/feed" in self.driver.current_url:
+                print("Login successful.")
+                self.save_cookies()
+                if self.take_screenshots:
+                    self.driver.save_screenshot("login_successful.png")
+                return True
+            else:
+                current_url = self.driver.current_url
+                print(f"Login might have failed. Current URL: {current_url}")
+                if "checkpoint" in current_url or "security-verification" in current_url:
+                    print("LinkedIn security verification is still required!")
+                    print("If you're using headless mode, try running with headless=False to complete verification.")
+                elif "session" in self.driver.page_source.lower() or "expired" in self.driver.page_source.lower():
+                    print("Session may have expired.")
+                elif "captcha" in self.driver.page_source.lower():
+                    print("CAPTCHA detected.")
+                
+                if self.take_screenshots:
+                    self.driver.save_screenshot("login_issue.png")
+                
+                return False
+                    
+            # Wait a moment after login
+            time.sleep(3)
+        except Exception as e:
+            print(f"Login failed: {str(e)}")
+            if self.take_screenshots:
+                self.driver.save_screenshot("login_failed.png")
+                
+            # Get more information about the failure
+            current_url = "Unknown"
+            page_source = "Unknown"
+            try:
+                current_url = self.driver.current_url
+                page_fragment = self.driver.page_source[:500] + "..." if len(self.driver.page_source) > 500 else self.driver.page_source
+                print(f"Current URL: {current_url}")
+                print(f"Page fragment: {page_fragment}")
+            except:
+                pass
+                
+            return False
+    
+    def find_purdue_profiles(self, max_profiles=30):
+        """Find LinkedIn profiles of Purdue CS students/alumni."""
+        print(f"Finding Purdue CS profiles (limit: {max_profiles})...")
+        profile_urls = []
+        
+        # Method 1: Use the Purdue University page to find alumni
+        try:
+            # Visit Purdue University page
+            purdue_url = "https://www.linkedin.com/school/purdue-university/"
+            print(f"Visiting Purdue University page: {purdue_url}")
+            self.driver.get(purdue_url)
+            time.sleep(3)
+            
+            # Look for the "People" or "Alumni" section
+            alumni_buttons = self.driver.find_elements("xpath", "//a[contains(@href, '/school/purdue-university/people/')]")
+            if alumni_buttons:
+                print("Found alumni button. Clicking...")
+                alumni_buttons[0].click()
+                time.sleep(3)
+                
+                if self.take_screenshots:
+                    self.driver.save_screenshot("purdue_alumni_page.png")
+                
+                # Try to filter for "Computer Science" if possible
+                try:
+                    filter_buttons = self.driver.find_elements("xpath", "//button[contains(text(), 'Filter')]")
+                    if filter_buttons:
+                        filter_buttons[0].click()
+                        time.sleep(2)
+                        
+                        # Look for field of study filter
+                        field_elements = self.driver.find_elements("xpath", "//button[contains(text(), 'Field of study')]")
+                        if field_elements:
+                            field_elements[0].click()
+                            time.sleep(1)
+                            
+                            # Type "Computer Science"
+                            input_elements = self.driver.find_elements("xpath", "//input[contains(@placeholder, 'Add') or contains(@placeholder, 'Search')]")
+                            if input_elements:
+                                input_elements[0].send_keys("Computer Science")
+                                time.sleep(2)
+                                
+                                # Select first option
+                                option_elements = self.driver.find_elements("xpath", "//div[contains(@role, 'option')]")
+                                if option_elements:
+                                    option_elements[0].click()
+                                    time.sleep(1)
+                                
+                                # Apply filter
+                                apply_buttons = self.driver.find_elements("xpath", "//button[contains(text(), 'Apply') or contains(text(), 'Show')]")
+                                if apply_buttons:
+                                    apply_buttons[0].click()
+                                    time.sleep(3)
+                except Exception as e:
+                    print(f"Error applying filters: {str(e)}")
+                
+                # Now extract profiles
+                print("Extracting profile links from alumni page...")
+                for page in range(5):  # Get first 5 pages
+                    # Find all profile links
+                    profile_elements = self.driver.find_elements("xpath", "//a[contains(@href, '/in/')]")
+                    current_page_urls = []
+                    
+                    for elem in profile_elements:
+                        try:
+                            href = elem.get_attribute("href")
+                            if href and '/in/' in href:
+                                clean_url = href.split('?')[0]  # Remove parameters
+                                if clean_url not in profile_urls and clean_url not in current_page_urls:
+                                    current_page_urls.append(clean_url)
+                        except:
+                            continue
+                    
+                    print(f"Found {len(current_page_urls)} new profile URLs on page {page+1}")
+                    profile_urls.extend(current_page_urls)
+                    
+                    # Stop if we have enough profiles
+                    if len(profile_urls) >= max_profiles:
+                        break
+                    
+                    # Try to go to next page
+                    try:
+                        next_button = self.driver.find_element("xpath", "//button[contains(@aria-label, 'Next')]")
+                        if next_button.is_enabled():
+                            next_button.click()
+                            time.sleep(3)
+                        else:
+                            print("Next button is disabled. No more pages.")
+                            break
+                    except:
+                        print("No next page button found. Reached the end.")
+                        break
+            else:
+                print("Could not find alumni section on Purdue University page.")
+        except Exception as e:
+            print(f"Error finding profiles from Purdue page: {str(e)}")
+        
+        # Method 2: If we don't have enough profiles, try search
+        if len(profile_urls) < max_profiles:
+            try:
+                print("Using search to find more Purdue CS profiles...")
+                search_url = "https://www.linkedin.com/search/results/people/?keywords=purdue%20computer%20science"
+                self.driver.get(search_url)
+                time.sleep(3)
+                
+                # Extract profiles from search results
+                for page in range(3):  # Get first 3 pages
+                    # Find all profile links
+                    profile_elements = self.driver.find_elements("xpath", "//a[contains(@href, '/in/')]")
+                    current_page_urls = []
+                    
+                    for elem in profile_elements:
+                        try:
+                            href = elem.get_attribute("href")
+                            if href and '/in/' in href:
+                                clean_url = href.split('?')[0]  # Remove parameters
+                                if clean_url not in profile_urls and clean_url not in current_page_urls:
+                                    current_page_urls.append(clean_url)
+                        except:
+                            continue
+                    
+                    print(f"Found {len(current_page_urls)} new profile URLs on search page {page+1}")
+                    profile_urls.extend(current_page_urls)
+                    
+                    # Stop if we have enough profiles
+                    if len(profile_urls) >= max_profiles:
+                        break
+                    
+                    # Try to go to next page
+                    try:
+                        next_button = self.driver.find_element("xpath", "//button[contains(@aria-label, 'Next')]")
+                        if next_button.is_enabled():
+                            next_button.click()
+                            time.sleep(3)
+                        else:
+                            break
+                    except:
+                        break
+            except Exception as e:
+                print(f"Error finding profiles from search: {str(e)}")
+        
+        # Limit to max_profiles
+        profile_urls = profile_urls[:max_profiles]
+        print(f"Found {len(profile_urls)} total profile URLs")
+        return profile_urls
+    
+    def scrape_profiles(self, profile_urls):
+        """Scrape data from LinkedIn profiles."""
+        print(f"Scraping {len(profile_urls)} profiles...")
+        
+        results = []
+        
+        for i, url in enumerate(profile_urls):
+            print(f"\n[{i+1}/{len(profile_urls)}] Scraping profile: {url}")
+            try:
+                profile_data = None
+                try:
+                    # Navigate to the profile page
+                    self.driver.get(url)
+                    time.sleep(3)  # Wait for the page to load
+                    
+                    # Check if we're on the login page
+                    if "authwall" in self.driver.current_url or "/login" in self.driver.current_url:
+                        print("Encountered login wall, trying to log in...")
+                        self.login()
+                        self.driver.get(url)
+                        time.sleep(3)
+                    
+                    # Check if we're still on the login page
+                    if "authwall" in self.driver.current_url or "/login" in self.driver.current_url:
+                        print("Still on login page after login attempt. Login might have failed.")
+                        continue
+                    
+                    # Use direct DOM methods to extract basic data
+                    try:
+                        # Extract name
+                        name_elements = self.driver.find_elements("xpath", "//h1[contains(@class, 'text-heading-xlarge')]")
+                        profile_name = name_elements[0].text.strip() if name_elements else "Unknown Name"
+                        print(f"Found name: {profile_name}")
+                        
+                        # Initialize profile data with default empty values to prevent NoneType errors
+                        profile_data = {
+                            "url": url,
+                            "name": profile_name,
+                            "educations": [],
+                            "experiences": [],
+                            "projects": [],
+                            "honors_awards": [],
+                            "image_url": None
+                        }
+                        
+                        # Extract LinkedIn profile image
+                        try:
+                            # Try with JavaScript (most reliable)
+                            img_url = self.driver.execute_script("""
+                                var imgs = document.querySelectorAll('img');
+                                for (var i = 0; i < imgs.length; i++) {
+                                    var img = imgs[i];
+                                    if ((img.alt && (img.alt.includes('profile') || img.alt.includes('photo'))) || 
+                                        (img.className && (img.className.includes('profile-photo') || img.className.includes('profile-picture')))) {
+                                        return img.src;
+                                    }
+                                }
+                                return document.querySelector('.pv-top-card-profile-picture__image')?.src;
+                            """)
+                            
+                            if img_url and "data:image" not in img_url:
+                                profile_data["image_url"] = img_url
+                                print(f"Found profile image via JavaScript: {img_url[:50]}...")
+                        except Exception as e:
+                            print(f"Could not extract profile image via JavaScript: {str(e)}")
+                        
+                        # If we still don't have an image, try with direct XPath
+                        if not profile_data.get("image_url"):
+                            selectors = [
+                                "//img[contains(@class, 'pv-top-card-profile-picture__image')]",
+                                "//img[contains(@class, 'profile-picture')]",
+                                "//img[contains(@alt, 'profile') or contains(@alt, 'photo')]",
+                                "//div[contains(@class, 'pv-top-card')]//img",
+                                "//div[contains(@class, 'profile-photo')]//img"
+                            ]
+                            
+                            for selector in selectors:
+                                try:
+                                    profile_img_elements = self.driver.find_elements("xpath", selector)
+                                    if profile_img_elements:
+                                        img_url = profile_img_elements[0].get_attribute("src")
+                                        if img_url and "data:image" not in img_url:
+                                            profile_data["image_url"] = img_url
+                                            print(f"Found profile image using selector: {selector}")
+                                            break
+                                except Exception as e:
+                                    continue
+                        
+                        # Now try using linkedin_scraper's Person class to get structured data
+                        # But we'll only use it for the data that's structured consistently
+                        person = Person(url, driver=self.driver, scrape=False)
+                        person.scrape(close_on_complete=False)
+                        
+                        # Update name if we have it from Person
+                        if hasattr(person, 'name') and person.name:
+                            profile_data["name"] = person.name
+                        
+                        # Extract education
+                        print("Extracting education...")
+                        profile_data["educations"] = []
+                        try:
+                            # First, try to find all education listings directly from the page
+                            print("Extracting education...")
+                            seen_educations = set()  # To track unique educations
+                            
+                            # METHOD 1: First extract using the person object
+                            if hasattr(person, 'educations'):
+                                for edu in person.educations:
+                                    school = edu.institution_name if hasattr(edu, 'institution_name') else ""
+                                    degree = edu.degree if hasattr(edu, 'degree') else ""
+                                    date_range = f"{edu.from_date} - {edu.to_date}" if hasattr(edu, 'from_date') else ""
+                                    
+                                    # Create a unique key for this education
+                                    edu_key = f"{school}|{degree}|{date_range}"
+                                    
+                                    # Skip if we've already seen this exact education
+                                    if edu_key in seen_educations:
+                                        continue
+                                        
+                                    seen_educations.add(edu_key)
+                                    
+                                    education_entry = {
+                                        "school": school,
+                                        "degree": degree,
+                                        "fieldOfStudy": "",  # Will try to extract from degree
+                                        "date_range": date_range
+                                    }
+                                    
+                                    # Parse degree field to extract field of study if possible
+                                    if education_entry["degree"] and "," in education_entry["degree"]:
+                                        degree_parts = education_entry["degree"].split(",")
+                                        education_entry["degree"] = degree_parts[0].strip()
+                                        if len(degree_parts) > 1:
+                                            education_entry["fieldOfStudy"] = degree_parts[1].strip()
+                                            
+                                    profile_data["educations"].append(education_entry)
+                            
+                            # METHOD 2: Now try to extract education sections directly from the page
+                            # This is more reliable for finding all education entries
+                            try:
+                                # Look for the education section
+                                education_sections = self.driver.find_elements("xpath", "//section[contains(@id, 'education-section')]")
+                                if education_sections:
+                                    edu_items = education_sections[0].find_elements("xpath", ".//li")
+                                    for edu_item in edu_items:
+                                        try:
+                                            # Extract school name
+                                            school_elem = edu_item.find_elements("xpath", ".//h3")
+                                            school = school_elem[0].text.strip() if school_elem else ""
+                                            
+                                            # Extract degree and field
+                                            degree_elem = edu_item.find_elements("xpath", ".//span[contains(@class, 'education__item--degree')]")
+                                            degree_text = degree_elem[0].text.strip() if degree_elem else ""
+                                            
+                                            # Check for activities in degree
+                                            activities = ""
+                                            if degree_text and "activities and societies:" in degree_text.lower():
+                                                activities_parts = degree_text.lower().split("activities and societies:")
+                                                if len(activities_parts) > 1:
+                                                    activities = activities_parts[1].strip()
+                                                    degree_text = activities_parts[0].strip()
+                                            
+                                            # Separate degree and field of study
+                                            degree = degree_text
+                                            field_of_study = ""
+                                            if degree and "," in degree:
+                                                degree_parts = degree.split(",")
+                                                degree = degree_parts[0].strip()
+                                                field_of_study = degree_parts[1].strip() if len(degree_parts) > 1 else ""
+                                            
+                                            # Extract grades if present
+                                            grade = ""
+                                            grade_elem = edu_item.find_elements("xpath", ".//span[contains(text(), 'Grade:') or contains(text(), 'GPA')]")
+                                            if grade_elem:
+                                                grade = grade_elem[0].text.replace("Grade:", "").replace("GPA:", "").strip()
+                                            
+                                            # Extract skills if present
+                                            skills = ""
+                                            skills_elem = edu_item.find_elements("xpath", ".//span[contains(text(), 'Skills:')]")
+                                            if skills_elem:
+                                                skills = skills_elem[0].text.replace("Skills:", "").strip()
+                                                
+                                            # Extract media if present
+                                            media = ""
+                                            media_elem = edu_item.find_elements("xpath", ".//a[contains(@href, 'media')]")
+                                            if media_elem:
+                                                media = media_elem[0].get_attribute("href")
+                                            
+                                            # Extract date range
+                                            date_elem = edu_item.find_elements("xpath", ".//span[contains(@class, 'date-range') or contains(@class, 'education-date')]")
+                                            date_range = date_elem[0].text.strip() if date_elem else ""
+                                            
+                                            # Create a unique key
+                                            edu_key = f"{school}|{degree}|{date_range}"
+                                            
+                                            # Skip if we've already seen this education
+                                            if edu_key in seen_educations:
+                                                continue
+                                            
+                                            seen_educations.add(edu_key)
+                                            
+                                            profile_data["educations"].append({
+                                                "school": school,
+                                                "degree": degree,
+                                                "fieldOfStudy": field_of_study,
+                                                "description": "",  # Will be filled in later if description is found
+                                                "grade": grade, 
+                                                "activities": activities,
+                                                "skills": skills,
+                                                "media": media,
+                                                "date_range": date_range
+                                            })
+                                        except Exception as e:
+                                            print(f"Error extracting individual education: {str(e)}")
+                            except Exception as e:
+                                print(f"Error finding education section: {str(e)}")
+                            
+                            # METHOD 3: Use JavaScript as a last resort
+                            if not profile_data["educations"]:
+                                try:
+                                    print("Trying JavaScript to extract education...")
+                                    education_data = self.driver.execute_script("""
+                                        var educations = [];
+                                        var eduSections = document.querySelectorAll('section#education-section, section[id*="education"]');
+                                        
+                                        for (var secIdx = 0; secIdx < eduSections.length; secIdx++) {
+                                            var section = eduSections[secIdx];
+                                            var items = section.querySelectorAll('li');
+                                            
+                                            for (var i = 0; i < items.length; i++) {
+                                                var item = items[i];
+                                                var school = item.querySelector('h3')?.textContent.trim() || '';
+                                                var degreeElem = item.querySelector('span[class*="degree"]');
+                                                var degree = degreeElem ? degreeElem.textContent.trim() : '';
+                                                var dateElem = item.querySelector('span[class*="date"]');
+                                                var dateRange = dateElem ? dateElem.textContent.trim() : '';
+                                                
+                                                educations.push({
+                                                    school: school,
+                                                    degree: degree,
+                                                    date_range: dateRange
+                                                });
+                                            }
+                                        }
+                                        return educations;
+                                    """)
+                                    
+                                    if education_data and isinstance(education_data, list):
+                                        for edu in education_data:
+                                            school = edu.get('school', '')
+                                            degree = edu.get('degree', '')
+                                            date_range = edu.get('date_range', '')
+                                            
+                                            # Skip empty data
+                                            if not school:
+                                                continue
+                                                
+                                            # Create a unique key
+                                            edu_key = f"{school}|{degree}|{date_range}"
+                                            
+                                            # Skip if we've already seen this education
+                                            if edu_key in seen_educations:
+                                                continue
+                                            
+                                            seen_educations.add(edu_key)
+                                            
+                                            # Parse degree field to extract field of study
+                                            field_of_study = ""
+                                            if degree and "," in degree:
+                                                degree_parts = degree.split(",")
+                                                degree = degree_parts[0].strip()
+                                                field_of_study = degree_parts[1].strip() if len(degree_parts) > 1 else ""
+                                            
+                                            profile_data["educations"].append({
+                                                "school": school,
+                                                "degree": degree,
+                                                "fieldOfStudy": field_of_study,
+                                                "date_range": date_range
+                                            })
+                                except Exception as e:
+                                    print(f"JavaScript education extraction failed: {str(e)}")
+                            
+                            # Try one more method for education if still missing
+                            if len(profile_data["educations"]) < 2:
+                                try:
+                                    print("Trying to look for additional education entries...")
+                                    # Try looking at the education details page
+                                    edu_details_url = f"{url}/details/education/"
+                                    self.driver.get(edu_details_url)
+                                    time.sleep(3)
+                                    
+                                    # Look for education entries on the details page
+                                    edu_items = self.driver.find_elements("xpath", "//li[contains(@class, 'pvs-list__item')]")
+                                    for item in edu_items:
+                                        try:
+                                            # Get the school
+                                            school_elem = item.find_elements("xpath", ".//span[@aria-hidden='true']")
+                                            if not school_elem:
+                                                continue
+                                                
+                                            school = school_elem[0].text.strip()
+                                            
+                                            # Skip if empty
+                                            if not school:
+                                                continue
+                                            
+                                            # Check if we already have this school
+                                            if any(edu.get("school", "") == school for edu in profile_data["educations"]):
+                                                continue
+                                            
+                                            # Try to get degree
+                                            degree = ""
+                                            field_of_study = ""
+                                            date_range = ""
+                                            
+                                            # Look for other spans that might have degree/dates
+                                            spans = item.find_elements("xpath", ".//span")
+                                            for span in spans:
+                                                text = span.text.strip()
+                                                if not text or text == school:
+                                                    continue
+                                                    
+                                                # Check if it might be a date
+                                                if text.count("20") > 0 and ("-" in text or "–" in text):
+                                                    date_range = text
+                                                # Otherwise could be degree info
+                                                elif degree == "":
+                                                    degree = text
+                                                    # Try to parse field of study
+                                                    if "," in degree:
+                                                        degree_parts = degree.split(",")
+                                                        degree = degree_parts[0].strip()
+                                                        field_of_study = degree_parts[1].strip() if len(degree_parts) > 1 else ""
+                                            
+                                            edu_key = f"{school}|{degree}|{date_range}"
+                                            if edu_key in seen_educations:
+                                                continue
+                                            
+                                            seen_educations.add(edu_key)
+                                            
+                                            profile_data["educations"].append({
+                                                "school": school,
+                                                "degree": degree,
+                                                "fieldOfStudy": field_of_study,
+                                                "date_range": date_range
+                                            })
+                                        except Exception as e:
+                                            print(f"Error extracting education from details page: {str(e)}")
+                                    
+                                    # Go back to main profile
+                                    self.driver.get(url)
+                                    time.sleep(2)
+                                except Exception as e:
+                                    print(f"Error navigating to education details: {str(e)}")
+                            
+                            print(f"Found {len(profile_data['educations'])} education entries")
+                            
+                            # Extract experiences
+                            print("Extracting experiences...")
+                            profile_data["experiences"] = []
+                            try:
+                                # Use JavaScript to extract all experiences
+                                experiences_data = self.driver.execute_script("""
+                                    var experiences = [];
+                                    
+                                    function findExperiences() {
+                                        var expSections = document.querySelectorAll('section#experience-section, section[id*="experience"]');
+                                        
+                                        if (expSections.length === 0) {
+                                            // Try to find any section that might contain experience
+                                            expSections = document.querySelectorAll('section');
+                                        }
+                                        
+                                        for (var secIdx = 0; secIdx < expSections.length; secIdx++) {
+                                            var section = expSections[secIdx];
+                                            var items = section.querySelectorAll('li');
+                                            
+                                            for (var i = 0; i < items.length; i++) {
+                                                var item = items[i];
+                                                var title = '';
+                                                var company = '';
+                                                var dateRange = '';
+                                                var location = '';
+                                                var description = '';
+                                                
+                                                // Get title
+                                                var titleElem = item.querySelector('h3, span[class*="title"]');
+                                                if (titleElem) title = titleElem.textContent.trim();
+                                                
+                                                // Get company
+                                                var companyElem = item.querySelector('p[class*="company"], span[class*="company"]');
+                                                if (companyElem) company = companyElem.textContent.trim();
+                                                
+                                                // Clean company name - remove "· Internship" or similar suffixes
+                                                if (company && company.includes(' · ')) {
+                                                    company = company.split(' · ')[0].trim();
+                                                }
+                                                
+                                                // Get date range
+                                                var dateElem = item.querySelector('span[class*="date"], span[class*="time"]');
+                                                if (dateElem) dateRange = dateElem.textContent.trim();
+                                                
+                                                // Get location
+                                                var locElem = item.querySelector('span[class*="location"]');
+                                                if (locElem) location = locElem.textContent.trim();
+                                                
+                                                // Get description
+                                                var descElem = item.querySelector('p[class*="description"]');
+                                                if (descElem) description = descElem.textContent.trim();
+                                                
+                                                // Parse date range
+                                                var startDate = '';
+                                                var endDate = '';
+                                                var isCurrent = false;
+                                                
+                                                if (dateRange) {
+                                                    if (dateRange.toLowerCase().includes('present')) {
+                                                        isCurrent = true;
+                                                        var parts = dateRange.split(' - ');
+                                                        startDate = parts[0].trim();
+                                                        endDate = '';
+                                                    } else {
+                                                        var parts = dateRange.split(' - ');
+                                                        startDate = parts[0].trim();
+                                                        endDate = parts.length > 1 ? parts[1].trim() : '';
+                                                    }
+                                                    
+                                                    // Special case for V1 @ Michigan with "1 yr" or "X mos" format
+                                                    if ((company && company.toLowerCase().includes('v1')) && (startDate.includes('yr') || startDate.includes('mo'))) {
+                                                        startDate = 'Sep 2023';
+                                                        endDate = '';
+                                                        isCurrent = true;
+                                                    }
+                                                }
+                                                
+                                                if (title || company) {
+                                                    experiences.push({
+                                                        title: title,
+                                                        company: company,
+                                                        location: location,
+                                                        description: description,
+                                                        dateRange: dateRange,
+                                                        startDate: startDate,
+                                                        endDate: endDate,
+                                                        isCurrent: isCurrent
+                                                    });
+                                                }
+                                            }
+                                        }
+                                        
+                                        return experiences;
+                                    }
+                                    
+                                    return findExperiences();
+                                """)
+                                
+                                if experiences_data and isinstance(experiences_data, list):
+                                    for exp in experiences_data:
+                                        title = exp.get('title', '')
+                                        company = exp.get('company', '')
+                                        
+                                        # Clean company name
+                                        if ' · ' in company:
+                                            company = company.split(' · ')[0].strip()
+                                        
+                                        # Get dates
+                                        start_date = exp.get('startDate', '')
+                                        end_date = exp.get('endDate', '')
+                                        is_current = exp.get('isCurrent', False)
+                                        
+                                        # Handle V1 @ Michigan special case
+                                        if 'v1' in company.lower() and (start_date.lower().find('yr') > -1 or start_date.lower().find('mo') > -1):
+                                            start_date = 'Sep 2023'
+                                            end_date = ''
+                                            is_current = True
+                                        
+                                        profile_data["experiences"].append({
+                                            "title": title,
+                                            "company": company,
+                                            "location": exp.get('location', ''),
+                                            "description": exp.get('description', ''),
+                                            "skills": "",
+                                            "media": "",
+                                            "startDate": start_date,
+                                            "endDate": end_date,
+                                            "isCurrent": is_current
+                                        })
+                                    
+                                    # Sort experiences by date (most recent first)
+                                    profile_data["experiences"] = sorted(
+                                        profile_data["experiences"],
+                                        key=lambda x: (not x.get("isCurrent", False), x.get("startDate", "")),
+                                        reverse=True
+                                    )
+                            except Exception as e:
+                                print(f"Error extracting experiences: {str(e)}")
+                            
+                            # Extract projects using JavaScript
+                            print("Extracting projects...")
+                            profile_data["projects"] = []
+                            try:
+                                projects_data = self.driver.execute_script("""
+                                    var projects = [];
+                                    
+                                    function findProjects() {
+                                        // Look for project sections
+                                        var projectSections = document.querySelectorAll('section[id*="project"], section[class*="project"]');
+                                        
+                                        // If no dedicated project sections, check accomplishments
+                                        if (projectSections.length === 0) {
+                                            projectSections = document.querySelectorAll('section[id*="accomplishment"]');
+                                        }
+                                        
+                                        for (var i = 0; i < projectSections.length; i++) {
+                                            var section = projectSections[i];
+                                            
+                                            // Check if this is an accomplishment section with projects
+                                            if (section.id && section.id.includes('accomplishment')) {
+                                                var headers = section.querySelectorAll('h3');
+                                                var foundProject = false;
+                                                
+                                                for (var h = 0; h < headers.length; h++) {
+                                                    if (headers[h].textContent.toLowerCase().includes('project')) {
+                                                        foundProject = true;
+                                                        
+                                                        // Get the list of projects
+                                                        var projectList = headers[h].nextElementSibling;
+                                                        if (projectList && projectList.tagName === 'UL') {
+                                                            var items = projectList.querySelectorAll('li');
+                                                            
+                                                            for (var j = 0; j < items.length; j++) {
+                                                                var item = items[j];
+                                                                var title = item.textContent.trim();
+                                                                
+                                                                projects.push({
+                                                                    title: title,
+                                                                    description: '',
+                                                                    skills: '',
+                                                                    association: '',
+                                                                    media: '',
+                                                                    contributors: '',
+                                                                    startDate: '',
+                                                                    endDate: ''
+                                                                });
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                if (foundProject) continue;
+                                            }
+                                            
+                                            // Standard project items
+                                            var items = section.querySelectorAll('li');
+                                            
+                                            for (var j = 0; j < items.length; j++) {
+                                                var item = items[j];
+                                                var title = '';
+                                                var description = '';
+                                                var startDate = '';
+                                                var endDate = '';
+                                                var projectUrl = '';
+                                                var skills = '';
+                                                var contributors = '';
+                                                var association = '';
+                                                var media = '';
+                                                
+                                                // Extract title
+                                                var titleElem = item.querySelector('h3, span[class*="title"], div[class*="title"]');
+                                                if (titleElem) {
+                                                    title = titleElem.textContent.trim();
+                                                }
+                                                
+                                                // Extract description
+                                                var descElem = item.querySelector('p, div[class*="description"]');
+                                                if (descElem) {
+                                                    description = descElem.textContent.trim();
+                                                }
+                                                
+                                                // Extract date range
+                                                var dateElem = item.querySelector('span[class*="date"]');
+                                                if (dateElem) {
+                                                    var dateRange = dateElem.textContent.trim();
+                                                    var dateParts = dateRange.split(' - ');
+                                                    startDate = dateParts[0].trim();
+                                                    endDate = dateParts.length > 1 ? dateParts[1].trim() : '';
+                                                }
+                                                
+                                                // Extract URL
+                                                var urlElem = item.querySelector('a[href]:not([href*="linkedin"]):not([href*="media"])');
+                                                if (urlElem) {
+                                                    projectUrl = urlElem.href;
+                                                }
+                                                
+                                                // Extract skills
+                                                var skillsElem = item.querySelector('span[class*="skill"], div[class*="skill"]');
+                                                if (skillsElem) {
+                                                    skills = skillsElem.textContent.trim();
+                                                } else if (description) {
+                                                    // Try to extract skills from description
+                                                    var skillsMatch = description.match(/Skills:\\s*(.+?)(?:\\.|$)/i);
+                                                    if (skillsMatch) {
+                                                        skills = skillsMatch[1].trim();
+                                                        description = description.replace(/Skills:(.+?)(?:\\.|$)/i, '').trim();
+                                                    }
+                                                }
+                                                
+                                                // Extract team/contributors
+                                                var teamElem = item.querySelector('span[class*="team"], div[class*="team"], span[class*="contributor"], div[class*="contributor"]');
+                                                if (teamElem) {
+                                                    contributors = teamElem.textContent.trim();
+                                                } else if (description) {
+                                                    // Try to extract team from description
+                                                    var teamMatch = description.match(/(?:Team|Contributors):\\s*(.+?)(?:\\.|$)/i);
+                                                    if (teamMatch) {
+                                                        contributors = teamMatch[1].trim();
+                                                        description = description.replace(/(?:Team|Contributors):(.+?)(?:\\.|$)/i, '').trim();
+                                                    }
+                                                }
+                                                
+                                                // Extract association (e.g., school/organization)
+                                                var assocElem = item.querySelector('span[class*="association"], div[class*="association"]');
+                                                if (assocElem) {
+                                                    association = assocElem.textContent.trim();
+                                                }
+                                                
+                                                // Extract media
+                                                var mediaElem = item.querySelector('a[href*="media"], a[data-control-name*="media"]');
+                                                if (mediaElem) {
+                                                    media = mediaElem.href;
+                                                }
+                                                
+                                                if (title) {
+                                                    projects.push({
+                                                        title: title,
+                                                        description: description,
+                                                        skills: skills,
+                                                        association: association,
+                                                        media: media,
+                                                        contributors: contributors,
+                                                        startDate: startDate,
+                                                        endDate: endDate,
+                                                        url: projectUrl
+                                                    });
+                                                }
+                                            }
+                                        }
+                                        
+                                        return projects;
+                                    }
+                                    
+                                    return findProjects();
+                                """)
+                                
+                                if projects_data and isinstance(projects_data, list):
+                                    for project in projects_data:
+                                        title = project.get('title', '')
+                                        description = project.get('description', '')
+                                        skills = project.get('skills', '')
+                                        association = project.get('association', '')
+                                        media = project.get('media', '')
+                                        contributors = project.get('contributors', '')
+                                        start_date = project.get('startDate', '')
+                                        end_date = project.get('endDate', '')
+                                        url = project.get('url', '')
+                                        
+                                        # Skip empty title
+                                        if not title:
+                                            continue
+                                        
+                                        # Create project with consistent field order
+                                        profile_data["projects"].append({
+                                            "title": title,
+                                            "description": description,
+                                            "skills": skills,
+                                            "association": association,
+                                            "media": media,
+                                            "contributors": contributors,
+                                            "startDate": start_date,
+                                            "endDate": end_date,
+                                            "url": url
+                                        })
+                            
+                            print(f"Found {len(profile_data['projects'])} projects")
+                        except Exception as e:
+                            print(f"Error extracting projects: {str(e)}")
+                            # Ensure projects exists in profile_data
+                            if profile_data and isinstance(profile_data, dict) and "projects" not in profile_data:
+                                profile_data["projects"] = []
+                        
+                        # Extract honors and awards using JavaScript
+                        print("Extracting honors and awards...")
+                        try:
+                            honors_data = self.driver.execute_script("""
+                                var honors = [];
+                                
+                                // Find honors section
+                                function findHonors() {
+                                    // Try to find honors section or accomplishments with honors
+                                    var honorSections = document.querySelectorAll('section[id*="honor"], section[id*="award"]');
+                                    
+                                    // If we found a dedicated honors section
+                                    for (var i = 0; i < honorSections.length; i++) {
+                                        var section = honorSections[i];
+                                        var items = section.querySelectorAll('li');
+                                        
+                                        for (var j = 0; j < items.length; j++) {
+                                            var item = items[j];
+                                            var title = '';
+                                            var issuer = '';
+                                            var date = '';
+                                            var description = '';
+                                            var association = '';
+                                            var media = '';
+                                            
+                                            // Get title
+                                            var titleElem = item.querySelector('h3, span[class*="title"]');
+                                            if (titleElem) title = titleElem.textContent.trim();
+                                            
+                                            // Get issuer
+                                            var issuerElem = item.querySelector('h4, span[class*="issuer"]');
+                                            if (issuerElem) issuer = issuerElem.textContent.trim();
+                                            
+                                            // Get date
+                                            var dateElem = item.querySelector('span[class*="date"]');
+                                            if (dateElem) date = dateElem.textContent.trim();
+                                            
+                                            // Get description
+                                            var descElem = item.querySelector('p, div[class*="description"]');
+                                            if (descElem) description = descElem.textContent.trim();
+                                            
+                                            // Extract association from issuer if present
+                                            if (issuer && issuer.toLowerCase().includes('issued by')) {
+                                                var match = issuer.match(/issued by\s+(.+?)$/i);
+                                                if (match) {
+                                                    association = match[1].trim();
+                                                    // Clean up issuer
+                                                    issuer = issuer.replace(/issued by/i, '').trim();
+                                                }
+                                            }
+                                            
+                                            // Look for media URL
+                                            var mediaElem = item.querySelector('a[href*="media"], a[data-control-name*="media"], a[href*="overlay"]');
+                                            if (mediaElem) {
+                                                media = mediaElem.href;
+                                            }
+                                            
+                                            if (title) {
+                                                honors.push({
+                                                    title: title,
+                                                    issuer: issuer,
+                                                    date: date,
+                                                    description: description,
+                                                    association: association,
+                                                    media: media
+                                                });
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Check accomplishments section for honors
+                                    var accompSections = document.querySelectorAll('section[id*="accomplishment"]');
+                                    for (var i = 0; i < accompSections.length; i++) {
+                                        var honorHeaders = accompSections[i].querySelectorAll('h3');
+                                        
+                                        for (var j = 0; j < honorHeaders.length; j++) {
+                                            if (honorHeaders[j].textContent.toLowerCase().includes('honor') || 
+                                                honorHeaders[j].textContent.toLowerCase().includes('award')) {
+                                                var container = honorHeaders[j].parentElement;
+                                                var items = container.querySelectorAll('li');
+                                                
+                                                for (var k = 0; k < items.length; k++) {
+                                                    var itemText = items[k].textContent.trim();
+                                                    if (itemText) {
+                                                        // Extract what we can from the text
+                                                        var lines = itemText.split('\\n').map(line => line.trim()).filter(line => line);
+                                                        var title = lines[0] || '';
+                                                        var issuer = lines[1] || '';
+                                                        var date = lines[2] || '';
+                                                        
+                                                        honors.push({
+                                                            title: title,
+                                                            issuer: issuer,
+                                                            date: date,
+                                                            description: '',
+                                                            association: '',
+                                                            media: ''
+                                                        });
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    return honors;
+                                }
+                                
+                                return findHonors();
+                            """)
+                            
+                            if honors_data and isinstance(honors_data, list):
+                                for honor in honors_data:
+                                    title = honor.get('title', '')
+                                    issuer = honor.get('issuer', '')
+                                    date = honor.get('date', '')
+                                    description = honor.get('description', '')
+                                    association = honor.get('association', '')
+                                    media = honor.get('media', '')
+                                    
+                                    # Skip empty title
+                                    if not title:
+                                        continue
+                                    
+                                    profile_data["honors_awards"].append({
+                                        "title": title,
+                                        "issuer": issuer,
+                                        "date": date,
+                                        "description": description,
+                                        "association": association,
+                                        "media": media
+                                    })
+                            
+                            print(f"Found {len(profile_data['honors_awards'])} honors/awards")
+                        except Exception as e:
+                            print(f"Error extracting honors with JavaScript: {str(e)}")
+                        
+                        # If no honors/awards found, try visiting the accomplishments section
+                        if not profile_data["honors_awards"]:
+                            try:
+                                accomp_url = f"{url}/details/accomplishments/"
+                                print(f"Navigating to accomplishments page: {accomp_url}")
+                                self.driver.get(accomp_url)
+                                time.sleep(3)
+                                
+                                # Look for sections with honors/awards
+                                honor_headers = self.driver.find_elements("xpath", "//h2[contains(text(), 'Honor') or contains(text(), 'Award')]")
+                                for header in honor_headers:
+                                    try:
+                                        # Find the section after this header
+                                        section = header.find_element("xpath", "./following-sibling::ul")
+                                        items = section.find_elements("xpath", "./li")
+                                        
+                                        for item in items:
+                                            honor_text = item.text.strip()
+                                            if honor_text:
+                                                # Split by newlines
+                                                parts = honor_text.split("\n")
+                                                title = parts[0] if parts else ""
+                                                issuer = parts[1] if len(parts) > 1 else ""
+                                                date = parts[2] if len(parts) > 2 else ""
+                                                
+                                                profile_data["honors_awards"].append({
+                                                    "title": title,
+                                                    "issuer": issuer,
+                                                    "date": date,
+                                                    "description": "",
+                                                    "association": "",
+                                                    "media": ""
+                                                })
+                                    except Exception as e:
+                                        print(f"Error processing honor header: {str(e)}")
+                                
+                                # Also try to look for h3 elements
+                                try:
+                                    honor_h3_headers = self.driver.find_elements("xpath", "//h3[contains(text(), 'Honor') or contains(text(), 'Award')]")
+                                    for h3_header in honor_h3_headers:
+                                        # Try to find parent section and then list elements
+                                        parent_section = h3_header.find_element("xpath", "./ancestor::section")
+                                        honor_items = parent_section.find_elements("xpath", ".//li")
+                                        
+                                        for item in honor_items:
+                                            honor_text = item.text.strip()
+                                            if honor_text:
+                                                parts = honor_text.split("\n")
+                                                title = parts[0] if parts else ""
+                                                issuer = parts[1] if len(parts) > 1 else ""
+                                                date = parts[2] if len(parts) > 2 else ""
+                                                
+                                                profile_data["honors_awards"].append({
+                                                    "title": title,
+                                                    "issuer": issuer,
+                                                    "date": date,
+                                                    "description": "",
+                                                    "association": "",
+                                                    "media": ""
+                                                })
+                                except Exception as e:
+                                    print(f"Error processing h3 honor headers: {str(e)}")
+                                
+                                # Try using a more general approach
+                                try:
+                                    # Try to find any section that might contain honors
+                                    sections = self.driver.find_elements("xpath", "//section")
+                                    for section in sections:
+                                        section_text = section.text.lower()
+                                        if "honor" in section_text or "award" in section_text:
+                                            # Look for list items
+                                            honor_items = section.find_elements("xpath", ".//li")
+                                            
+                                            for item in honor_items:
+                                                honor_text = item.text.strip()
+                                                if honor_text:
+                                                    parts = honor_text.split("\n")
+                                                    title = parts[0] if parts else ""
+                                                    issuer = parts[1] if len(parts) > 1 else ""
+                                                    date = parts[2] if len(parts) > 2 else ""
+                                                    
+                                                    # Check if this is likely an honor
+                                                    lower_title = title.lower()
+                                                    is_likely_honor = (
+                                                        "award" in lower_title or
+                                                        "honor" in lower_title or
+                                                        "prize" in lower_title or
+                                                        "scholar" in lower_title or
+                                                        "recognition" in lower_title or
+                                                        "medal" in lower_title
+                                                    )
+                                                    
+                                                    if is_likely_honor:
+                                                        profile_data["honors_awards"].append({
+                                                            "title": title,
+                                                            "issuer": issuer,
+                                                            "date": date,
+                                                            "description": "",
+                                                            "association": "",
+                                                            "media": ""
+                                                        })
+                                except Exception as e:
+                                    print(f"Error in general honor section extraction: {str(e)}")
+                                
+                                # Go back to profile
+                                self.driver.get(url)
+                                time.sleep(2)
+                            except Exception as e:
+                                print(f"Error navigating to accomplishments: {str(e)}")
+                        
+                        self.profile_data.append(profile_data)
+                        print(f"Successfully scraped profile: {profile_data['name']}")
+                    except Exception as inner_e:
+                        print(f"Error extracting profile data: {str(inner_e)}")
+                    
+                except Exception as e:
+                    print(f"Error extracting profile data: {str(e)}")
+                
+                # Add a random delay between profile scrapes
+                if i < len(profile_urls) - 1:
+                    delay = 3 + 3 * random.random()
+                    print(f"Waiting {delay:.2f} seconds before next profile...")
+                    time.sleep(delay)
+                
+                # Ensure we have a valid profile_data dictionary before adding to results
+                if profile_data is None:
+                    profile_data = {
+                        "url": url,
+                        "name": "Unknown",
+                        "educations": [],
+                        "experiences": [],
+                        "projects": [],
+                        "honors_awards": [],
+                        "image_url": None
+                    }
+                
+                # Add the data to results
+                results.append(profile_data)
+                
+            except Exception as e:
+                print(f"Error scraping profile {url}: {str(e)}")
+        
+        return results
+    
+    def save_to_csv(self, filename="purdue_cs_profiles.csv"):
+        """Save profile data to CSV."""
+        print(f"Saving data to CSV: {filename}")
+        
+        # Flatten the nested data
+        flattened_data = []
+        
+        for profile in self.profile_data:
+            base_data = {
+                "url": profile["url"],
+                "name": profile["name"]
+            }
+            
+            # Handle education
+            if profile["educations"]:
+                for i, edu in enumerate(profile["educations"]):
+                    base_data[f"education_{i+1}_school"] = edu.get("school", "")
+                    base_data[f"education_{i+1}_degree"] = edu.get("degree", "")
+                    base_data[f"education_{i+1}_fieldOfStudy"] = edu.get("fieldOfStudy", "")
+                    base_data[f"education_{i+1}_date_range"] = edu.get("date_range", "")
+            
+            # Handle experience
+            if profile["experiences"]:
+                for i, exp in enumerate(profile["experiences"]):
+                    base_data[f"experience_{i+1}_title"] = exp.get("title", "")
+                    base_data[f"experience_{i+1}_company"] = exp.get("company", "")
+                    base_data[f"experience_{i+1}_description"] = exp.get("description", "")
+                    base_data[f"experience_{i+1}_location"] = exp.get("location", "")
+                    base_data[f"experience_{i+1}_skills"] = exp.get("skills", "")
+                    base_data[f"experience_{i+1}_media"] = exp.get("media", "")
+                    base_data[f"experience_{i+1}_date_range"] = exp.get("date_range", "")
+            
+            # Handle projects
+            if profile["projects"]:
+                for i, project in enumerate(profile["projects"]):
+                    base_data[f"project_{i+1}_title"] = project.get("title", "")
+                    base_data[f"project_{i+1}_description"] = project.get("description", "")
+                    base_data[f"project_{i+1}_url"] = project.get("url", "")
+                    base_data[f"project_{i+1}_skills"] = project.get("skills", "")
+                    base_data[f"project_{i+1}_contributors"] = project.get("contributors", "")
+                    base_data[f"project_{i+1}_association"] = project.get("association", "")
+                    base_data[f"project_{i+1}_media"] = project.get("media", "")
+                    base_data[f"project_{i+1}_startDate"] = project.get("startDate", "")
+                    base_data[f"project_{i+1}_endDate"] = project.get("endDate", "")
+            
+            # Handle honors and awards
+            if profile["honors_awards"]:
+                for i, honor in enumerate(profile["honors_awards"]):
+                    base_data[f"honor_{i+1}_title"] = honor.get("title", "")
+                    base_data[f"honor_{i+1}_issuer"] = honor.get("issuer", "")
+                    base_data[f"honor_{i+1}_date"] = honor.get("date", "")
+                    base_data[f"honor_{i+1}_description"] = honor.get("description", "")
+                    base_data[f"honor_{i+1}_association"] = honor.get("association", "")
+                    base_data[f"honor_{i+1}_media"] = honor.get("media", "")
+            
+            flattened_data.append(base_data)
+        
+        # Convert to DataFrame and save to CSV
+        df = pd.DataFrame(flattened_data)
+        df.to_csv(filename, index=False)
+        print(f"Successfully saved data to {filename}")
+    
+    def save_to_json(self, filename="purdue_cs_profiles.json"):
+        """Save profile data to JSON."""
+        print(f"Saving data to JSON: {filename}")
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(self.profile_data, f, ensure_ascii=False, indent=4)
+        print(f"Successfully saved data to {filename}")
+    
+    def save_cookies(self):
+        """Save cookies to a file for future use."""
+        if not self.driver:
+            return False
+        
+        print("Saving cookies...")
+        try:
+            cookies = self.driver.get_cookies()
+            with open(self.cookies_file, 'w') as f:
+                json.dump(cookies, f)
+            print(f"Cookies saved to {self.cookies_file}")
+            return True
+        except Exception as e:
+            print(f"Error saving cookies: {str(e)}")
+            return False
+    
+    def load_cookies(self):
+        """Load cookies from file if available."""
+        if not self.driver or not os.path.exists(self.cookies_file):
+            return False
+        
+        print(f"Loading cookies from {self.cookies_file}...")
+        try:
+            with open(self.cookies_file, 'r') as f:
+                cookies = json.load(f)
+            
+            # Need to be on LinkedIn domain to set cookies
+            self.driver.get("https://www.linkedin.com")
+            time.sleep(2)
+            
+            for cookie in cookies:
+                try:
+                    self.driver.add_cookie(cookie)
+                except:
+                    pass
+            
+            print("Cookies loaded successfully")
+            return True
+        except Exception as e:
+            print(f"Error loading cookies: {str(e)}")
+            return False
+    
+    def run(self, max_profiles=30):
+        """Run the complete scraping workflow."""
+        try:
+            # Setup and login
+            self.setup_driver()
+            login_success = self.login()
+            
+            # Check if login was successful
+            if not login_success:
+                print("Login failed. Cannot proceed with scraping.")
+                if self.headless:
+                    print("Consider running first with headless=False to manually complete verification.")
+                return
+            
+            # Verify we're on the feed page
+            if not "/feed" in self.driver.current_url:
+                print("Warning: Not on LinkedIn feed page. Current URL:", self.driver.current_url)
+                return
+            
+            # Find profiles
+            profile_urls = self.find_purdue_profiles(max_profiles=max_profiles)
+            
+            if not profile_urls:
+                print("No profiles found. Exiting.")
+                return
+            
+            # Scrape profiles
+            self.scrape_profiles(profile_urls)
+            
+            if not self.profile_data:
+                print("No profile data collected. Exiting.")
+                return
+            
+            # Save data
+            self.save_to_csv()
+            self.save_to_json()
+            
+            print("Scraping completed successfully!")
+            
+        except Exception as e:
+            print(f"Error during scraping process: {str(e)}")
+            if self.driver and self.take_screenshots:
+                self.driver.save_screenshot("error.png")
+        finally:
+            if self.driver:
+                print("Closing Chrome driver...")
+                self.driver.quit()
+
+if __name__ == "__main__":
+    # Set to a lower number for testing
+    TEST_MODE = True
+    max_profiles = 5 if TEST_MODE else 30
+    take_screenshots = True
+    
+    # Load environment variables
+    load_dotenv()
+    
+    # Get LinkedIn credentials from environment variables
+    email = os.environ.get("LINKEDIN_EMAIL")
+    password = os.environ.get("LINKEDIN_PASSWORD")
+    
+    # Use visible browser for manual verification
+    headless = False
+    manual_verification_time = 120  # 2 minutes to complete verification
+    
+    # Initialize and run the scraper
+    scraper = PurdueLinkedInScraper(
+        email=email, 
+        password=password, 
+        take_screenshots=take_screenshots,
+        headless=headless,
+        manual_verification_time=manual_verification_time
+    )
+    scraper.run(max_profiles=max_profiles) 

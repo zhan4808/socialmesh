@@ -1,0 +1,170 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Profile {
+  id                String              @id @default(cuid())
+  linkedinId        String              @unique
+  name              String
+  url               String              @unique
+  imageUrl          String?
+  eloRating         Int                 @default(1200)
+  isAlumni          Boolean             @default(false)
+  experiences       Experience[]
+  educations        Education[]
+  projects          Project[]
+  honors            Honor[]
+  votesAsFirst      Vote[]              @relation("FirstProfile")
+  votesAsSecond     Vote[]              @relation("SecondProfile")
+  user              User?               @relation(fields: [userId], references: [id])
+  userId            String?             @unique
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model Experience {
+  id          String    @id @default(cuid())
+  title       String
+  companyName String
+  location    String?
+  description String?
+  skills      String?
+  media       String?
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Education {
+  id          String    @id @default(cuid())
+  school      String
+  degree      String?
+  fieldOfStudy String?
+  description String?
+  grade       String?
+  activities  String?
+  skills      String?
+  media       String?
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  url         String?
+  skills      String?
+  contributors String?
+  association String?
+  media       String?
+  startDate   DateTime?
+  endDate     DateTime?
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Vote {
+  id              String      @id @default(cuid())
+  firstProfileId  String
+  secondProfileId String
+  result          VoteResult
+  voter           User?       @relation(fields: [voterId], references: [id])
+  voterId         String?
+  firstProfile    Profile     @relation("FirstProfile", fields: [firstProfileId], references: [id])
+  secondProfile   Profile     @relation("SecondProfile", fields: [secondProfileId], references: [id])
+  createdAt       DateTime    @default(now())
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  profile       Profile?
+  votes         Vote[]
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                 String    @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?   @db.Text
+  access_token       String?   @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?   @db.Text
+  session_state      String?
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+
+  @@unique([identifier, token])
+}
+
+model Honor {
+  id          String   @id @default(cuid())
+  title       String
+  issuer      String?
+  date        String?
+  description String?
+  association String?
+  media       String?
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum VoteResult {
+  FIRST_WON
+  SECOND_WON
+  TIE
+} 

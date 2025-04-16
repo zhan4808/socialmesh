@@ -1,0 +1,9 @@
+fastapi==0.115.8
+uvicorn==0.29.0
+python-dotenv==1.0.1
+selenium==4.18.1
+webdriver-manager==4.0.1
+pandas==2.2.3
+pydantic==2.10.4
+linkedin-scraper
+python-multipart==0.0.9
