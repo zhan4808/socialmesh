@@ -1,10 +1,11 @@
 # PurdueRanked
 
-   1. Open your browser to: http://127.0.0.1:8000/docs
-   2. Find and execute the POST /login endpoint
-   3. A browser window will open automatically
-   4. Complete any LinkedIn security verification steps
-   5. Wait for success message (cookies saved)
+   1. Open your browser to: http://localhost:8000/docs
+   2. testing suite: http://localhost:8000/scraper-test-ui
+   3. Find and execute the POST /login endpoint
+   4. A browser window will open automatically
+   5. Complete any LinkedIn security verification steps
+   6. Wait for success message (cookies saved)
    - Now you can use any endpoint normally
    - No browser window will appear (headless mode)
    - The saved cookies will be used for authentication
