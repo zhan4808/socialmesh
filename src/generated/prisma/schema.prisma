@@ -1,0 +1,158 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id               String            @id @default(cuid())
+  email            String            @unique
+  name             String?
+  image            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  connections      Connection[]
+  platformAccounts PlatformAccount[]
+  sentMessages     Message[]         @relation("SentMessages")
+  receivedMessages Message[]         @relation("ReceivedMessages")
+  interactions     ConnectionEvent[]
+  networkStats     NetworkStats?
+}
+
+model PlatformAccount {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platformType Platform
+  platformId   String
+  accessToken  String?
+  refreshToken String?
+  tokenExpiry  DateTime?
+  lastSynced   DateTime?
+  username     String?
+  profileUrl   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([userId, platformType])
+  @@index([platformType, platformId])
+}
+
+model Connection {
+  id              String            @id @default(cuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platformType    Platform
+  connectionId    String // External ID from the platform
+  name            String
+  jobTitle        String?
+  company         String?
+  email           String?
+  phoneNumber     String?
+  profileUrl      String?
+  imageUrl        String?
+  connectionLevel Int? // e.g., 1st, 2nd, 3rd degree
+  location        String?
+  bio             String?
+  tags            String[]
+  notes           String?
+  firstConnected  DateTime?
+  lastInteraction DateTime?
+  strength        Float? // Calculated connection strength (0-100)
+  events          ConnectionEvent[]
+  messages        Message[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@unique([userId, platformType, connectionId])
+  @@index([userId])
+  @@index([strength])
+}
+
+model ConnectionEvent {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connectionId String
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  eventType    EventType
+  platform     Platform
+  timestamp    DateTime
+  metadata     Json?
+  createdAt    DateTime   @default(now())
+
+  @@index([userId, connectionId])
+  @@index([userId, timestamp])
+}
+
+model Message {
+  id           String      @id @default(cuid())
+  senderId     String
+  sender       User        @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId   String
+  receiver     User        @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  connectionId String?
+  connection   Connection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  platform     Platform
+  externalId   String? // ID from the original platform
+  content      String
+  timestamp    DateTime
+  metadata     Json?
+  createdAt    DateTime    @default(now())
+
+  @@index([senderId, timestamp])
+  @@index([receiverId, timestamp])
+  @@index([connectionId])
+}
+
+model NetworkStats {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalConnections       Int      @default(0)
+  averageStrength        Float?
+  lastCalculated         DateTime @default(now())
+  connectionsPerPlatform Json? // Map of platform to count
+  topTags                Json? // Array of most common tags
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+enum Platform {
+  LINKEDIN
+  TWITTER
+  FACEBOOK
+  INSTAGRAM
+  EMAIL
+  SMS
+  WHATSAPP
+  TELEGRAM
+  DISCORD
+  SLACK
+  OTHER
+}
+
+enum EventType {
+  CONNECTED
+  MESSAGE_SENT
+  MESSAGE_RECEIVED
+  PROFILE_VIEWED
+  CONTENT_LIKED
+  CONTENT_SHARED
+  MEETING
+  CALL
+  EMAIL
+  TAGGED
+  OTHER
+}
