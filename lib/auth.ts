@@ -22,6 +22,26 @@ const prisma = new PrismaClient();
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
+    // For development, move credentials to the first position
+    CredentialsProvider({
+      name: 'Development Login',
+      credentials: {
+        email: { label: "Email", type: "email", placeholder: "test@example.com" },
+        password: { label: "Password", type: "password", placeholder: "password" }
+      },
+      async authorize(credentials) {
+        // For easy testing - any credentials will work
+        if (credentials?.email && credentials?.password) {
+          return { 
+            id: '1', 
+            name: 'Test User', 
+            email: credentials.email,
+            image: 'https://via.placeholder.com/150'
+          };
+        }
+        return null;
+      }
+    }),
     LinkedInProvider({
       clientId: process.env.LINKEDIN_CLIENT_ID || "",
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET || "",
@@ -29,26 +49,6 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    }),
-    // Add a basic credentials provider for development/testing
-    CredentialsProvider({
-      name: 'Credentials',
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
-      },
-      async authorize(credentials) {
-        // This is just for testing - in production, you'd want real auth
-        if (credentials?.email === 'test@example.com' && credentials?.password === 'password') {
-          return { 
-            id: '1', 
-            name: 'Test User', 
-            email: 'test@example.com',
-            image: 'https://via.placeholder.com/150'
-          };
-        }
-        return null;
-      }
     }),
   ],
   callbacks: {
