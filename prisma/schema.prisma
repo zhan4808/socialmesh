@@ -38,13 +38,18 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
+  id              String    @id @default(cuid())
+  name            String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  image           String?
+  accounts        Account[]
+  sessions        Session[]
+  profile         Profile?
+  sentMatches     Match[]   @relation("SentMatches")
+  receivedMatches Match[]   @relation("ReceivedMatches")
+  messages        Message[]
+  subscription    Subscription?
 }
 
 model VerificationToken {
@@ -53,4 +58,80 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Profile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  headline         String?
+  bio              String?  @db.Text
+  industry         String?
+  location         String?
+  skills           String[] @default([])
+  experience       Json[]   @default([])
+  education        Json[]   @default([])
+  interests        String[] @default([])
+  networking_goals String[] @default([])
+  last_updated     DateTime @default(now())
+  profileViews     Int      @default(0)
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Match {
+  id              String   @id @default(cuid())
+  senderId        String
+  receiverId      String
+  status          MatchStatus @default(PENDING)
+  matchScore      Float
+  matchReasons    String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  sender          User     @relation("SentMatches", fields: [senderId], references: [id])
+  receiver        User     @relation("ReceivedMatches", fields: [receiverId], references: [id])
+  messages        Message[]
+
+  @@unique([senderId, receiverId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  matchId   String
+  userId    String
+  content   String   @db.Text
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  sender    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id                 String            @id @default(cuid())
+  userId             String            @unique
+  tier               SubscriptionTier  @default(FREE)
+  startDate          DateTime          @default(now())
+  endDate            DateTime?
+  active             Boolean           @default(true)
+  paymentIntentId    String?
+  receiptUrl         String?
+  analyticsEnabled   Boolean           @default(false)
+  priorityMatching   Boolean           @default(false)
+  advancedFilters    Boolean           @default(false)
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum SubscriptionTier {
+  FREE
+  BASIC
+  PREMIUM
+  ENTERPRISE
 } 
