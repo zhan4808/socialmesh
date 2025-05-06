@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String       @id @default(uuid())
+  email             String       @unique
+  linkedInId        String?      @unique
+  name              String?
+  profilePicture    String?
+  headline          String?
+  industry          String?
+  location          String?
+  bio               String?      @db.Text
+  currentPosition   String?
+  experience        Json?
+  education         Json?
+  skills            String[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  
+  // Relations
+  sentMatches       Match[]      @relation("SentMatches")
+  receivedMatches   Match[]      @relation("ReceivedMatches")
+  sentMessages      Message[]    @relation("SentMessages")
+  receivedMessages  Message[]    @relation("ReceivedMessages")
+  preferences       Preferences?
+  analytics         Analytics?
+}
+
+model Match {
+  id              String     @id @default(uuid())
+  senderId        String
+  receiverId      String
+  status          MatchStatus @default(PENDING)
+  score           Float
+  matchReason     String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  
+  // Relations
+  sender          User       @relation("SentMatches", fields: [senderId], references: [id])
+  receiver        User       @relation("ReceivedMatches", fields: [receiverId], references: [id])
+  
+  @@unique([senderId, receiverId])
+}
+
+model Message {
+  id              String     @id @default(uuid())
+  senderId        String
+  receiverId      String
+  content         String     @db.Text
+  read            Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+  
+  // Relations
+  sender          User       @relation("SentMessages", fields: [senderId], references: [id])
+  receiver        User       @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model Preferences {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  industries        String[]
+  skills            String[]
+  locations         String[]
+  networkingGoals   String[]
+  isPremium         Boolean   @default(false)
+  premiumTier       PremiumTier? @default(FREE)
+  subscribedAt      DateTime?
+  premiumExpiresAt  DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id])
+}
+
+model Analytics {
+  id                      String    @id @default(uuid())
+  userId                  String    @unique
+  profileViews            Int       @default(0)
+  searchAppearances       Int       @default(0)
+  connectionRate          Float?    // Percentage of successful connections
+  responseRate            Float?    // Percentage of messages that get responses
+  industryConnectionsData Json?     // Distribution of connections by industry
+  skillsMatchData         Json?     // Analysis of skills that match most frequently
+  weeklyActivity          Json?     // Weekly activity tracking
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  // Relations
+  user                    User      @relation(fields: [userId], references: [id])
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum PremiumTier {
+  FREE
+  BASIC
+  PROFESSIONAL
+  ENTERPRISE
+}
