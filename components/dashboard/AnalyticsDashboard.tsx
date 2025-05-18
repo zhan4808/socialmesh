@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface AnalyticsDashboardProps {
   userId?: string
@@ -53,9 +54,9 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
   }, [userId])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <motion.div className="border-b border-gray-200 bg-white/70 backdrop-blur rounded-2xl px-4 py-2 shadow" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
         <nav className="-mb-px flex space-x-6">
           <button
             onClick={() => setActiveTab('overview')}
@@ -98,10 +99,10 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
             Export & Reports
           </button>
         </nav>
-      </div>
+      </motion.div>
       
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <motion.div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <div className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
           <dt className="truncate text-sm font-medium text-gray-500">Total Profile Views</dt>
           <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">2,542</dd>
@@ -134,112 +135,114 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
             <span className="ml-2 text-gray-500">from last month</span>
           </dd>
         </div>
-      </div>
+      </motion.div>
       
       {/* Charts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Profile Views Chart */}
-        <div className="overflow-hidden rounded-lg bg-white p-6 shadow">
-          <h3 className="text-base font-medium text-gray-900">Profile Views Over Time</h3>
-          <div className="mt-6 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={mockData.profileViewsOverTime}
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="views" stroke="#0284c7" activeDot={{ r: 8 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        
-        {/* Match Quality Chart */}
-        <div className="overflow-hidden rounded-lg bg-white p-6 shadow">
-          <h3 className="text-base font-medium text-gray-900">Match Quality Over Time</h3>
-          <div className="mt-6 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={mockData.matchQualityOverTime}
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="score" stroke="#15803d" activeDot={{ r: 8 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        
-        {/* Connections by Industry */}
-        <div className="overflow-hidden rounded-lg bg-white p-6 shadow">
-          <h3 className="text-base font-medium text-gray-900">Connections by Industry</h3>
-          <div className="mt-6 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={mockData.connectionsByIndustry}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
+      <AnimatePresence mode="wait">
+        <motion.div key={activeTab} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} transition={{ duration: 0.5 }} className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Profile Views Chart */}
+          <div className="overflow-hidden rounded-lg bg-white p-6 shadow">
+            <h3 className="text-base font-medium text-gray-900">Profile Views Over Time</h3>
+            <div className="mt-6 h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={mockData.profileViewsOverTime}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
                 >
-                  {mockData.connectionsByIndustry.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="views" stroke="#0284c7" activeDot={{ r: 8 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
-        
-        {/* Response Rates */}
-        <div className="overflow-hidden rounded-lg bg-white p-6 shadow">
-          <h3 className="text-base font-medium text-gray-900">Connection Response Rates</h3>
-          <div className="mt-6 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={mockData.responseRates}
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="status" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="rate" fill="#0284c7" />
-              </BarChart>
-            </ResponsiveContainer>
+          
+          {/* Match Quality Chart */}
+          <div className="overflow-hidden rounded-lg bg-white p-6 shadow">
+            <h3 className="text-base font-medium text-gray-900">Match Quality Over Time</h3>
+            <div className="mt-6 h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={mockData.matchQualityOverTime}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="score" stroke="#15803d" activeDot={{ r: 8 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
-      </div>
+          
+          {/* Connections by Industry */}
+          <div className="overflow-hidden rounded-lg bg-white p-6 shadow">
+            <h3 className="text-base font-medium text-gray-900">Connections by Industry</h3>
+            <div className="mt-6 h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={mockData.connectionsByIndustry}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {mockData.connectionsByIndustry.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          
+          {/* Response Rates */}
+          <div className="overflow-hidden rounded-lg bg-white p-6 shadow">
+            <h3 className="text-base font-medium text-gray-900">Connection Response Rates</h3>
+            <div className="mt-6 h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={mockData.responseRates}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="status" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="rate" fill="#0284c7" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   )
 } 

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
+import { motion } from 'framer-motion'
 
 export default function Navigation() {
   const { data: session } = useSession()
@@ -23,193 +24,71 @@ export default function Navigation() {
   ]
 
   return (
-    <nav className="bg-white shadow">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center">
-            <Link href="/" className="flex flex-shrink-0 items-center">
-              <span className="text-xl font-bold text-primary-600">SocialMesh</span>
-            </Link>
-            <div className="hidden md:ml-6 md:block">
-              <div className="flex space-x-4">
-                {navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`rounded-md px-3 py-2 text-sm font-medium ${
-                      item.current
-                        ? 'bg-primary-50 text-primary-700'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                    aria-current={item.current ? 'page' : undefined}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <div className="hidden md:block">
-            <div className="flex items-center">
-              {session?.user && (
-                <div className="relative ml-3">
-                  <div className="flex items-center">
-                    <button
-                      type="button"
-                      className="flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      onClick={toggleMenu}
-                    >
-                      {session.user.image ? (
-                        <Image
-                          className="h-8 w-8 rounded-full"
-                          src={session.user.image}
-                          alt=""
-                          width={32}
-                          height={32}
-                        />
-                      ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-800">
-                          {session.user.name?.charAt(0) || 'U'}
-                        </div>
-                      )}
-                    </button>
-                  </div>
-                  
-                  {isMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
-                      <p className="px-4 py-2 text-sm text-gray-700">{session.user.name || session.user.email}</p>
-                      <div className="border-t border-gray-100"></div>
-                      <Link
-                        href="/dashboard/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Your Profile
-                      </Link>
-                      <Link
-                        href="/dashboard/settings"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Settings
-                      </Link>
-                      <Link
-                        href="/dashboard/premium"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Upgrade to Premium
-                      </Link>
-                      <button
-                        onClick={() => signOut({ callbackUrl: '/' })}
-                        className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Sign out
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <div className="flex md:hidden">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
-              onClick={toggleMenu}
-            >
-              <span className="sr-only">Open main menu</span>
-              <svg
-                className={`h-6 w-6 ${isMenuOpen ? 'hidden' : 'block'}`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-              <svg
-                className={`h-6 w-6 ${isMenuOpen ? 'block' : 'hidden'}`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+    <motion.nav 
+      className="fixed top-6 left-1/2 z-50 w-[90vw] max-w-5xl -translate-x-1/2 rounded-2xl bg-white/60 backdrop-blur-lg shadow-2xl border border-white/30 flex items-center justify-between px-8 py-4"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+    >
+      <Link href="/" className="flex items-center space-x-3">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+          <span className="text-lg font-bold text-white">SM</span>
         </div>
-      </div>
-
-      {/* Mobile menu */}
-      <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
-        <div className="space-y-1 px-2 pb-3 pt-2">
-          {navigation.map((item) => (
+        <span className="text-2xl font-bold tracking-tight text-gray-900">SocialMesh</span>
+      </Link>
+      <div className="hidden md:flex items-center space-x-10">
+        {navigation.map((item, i) => (
+          <motion.div key={item.name} whileHover={{ y: -2, scale: 1.08 }}>
             <Link
-              key={item.name}
               href={item.href}
-              className={`block rounded-md px-3 py-2 text-base font-medium ${
-                item.current
-                  ? 'bg-primary-50 text-primary-700'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
+              className={`text-base px-2 py-1 rounded transition-colors duration-200 ${item.current ? 'text-indigo-600 font-semibold' : 'text-gray-700 hover:text-indigo-500'}`}
             >
               {item.name}
             </Link>
-          ))}
-        </div>
-        {session?.user && (
-          <div className="border-t border-gray-200 pb-3 pt-4">
-            <div className="flex items-center px-5">
+          </motion.div>
+        ))}
+      </div>
+      <div className="flex items-center space-x-6">
+        {session?.user ? (
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <button
+              onClick={toggleMenu}
+              className="flex items-center space-x-2 rounded-full bg-white/80 px-4 py-2 shadow border border-white/30 hover:bg-white"
+            >
               {session.user.image ? (
-                <Image
-                  className="h-10 w-10 rounded-full"
-                  src={session.user.image}
-                  alt=""
-                  width={40}
-                  height={40}
-                />
+                <Image src={session.user.image} alt="" width={32} height={32} className="rounded-full" />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-primary-800">
+                <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
                   {session.user.name?.charAt(0) || 'U'}
                 </div>
               )}
-              <div className="ml-3">
-                <div className="text-base font-medium text-gray-800">{session.user.name}</div>
-                <div className="text-sm font-medium text-gray-500">{session.user.email}</div>
-              </div>
-            </div>
-            <div className="mt-3 space-y-1 px-2">
-              <Link
-                href="/dashboard/profile"
-                className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+              <span className="font-medium text-gray-900">{session.user.name?.split(' ')[0]}</span>
+            </button>
+            {isMenuOpen && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="absolute right-0 mt-2 w-56 rounded-xl bg-white/90 shadow-2xl border border-white/30 p-4 z-50">
+                <p className="mb-2 text-sm text-gray-700 font-semibold">{session.user.name || session.user.email}</p>
+                <Link href="/dashboard/profile" className="block py-2 text-gray-700 hover:text-indigo-600">Your Profile</Link>
+                <Link href="/dashboard/settings" className="block py-2 text-gray-700 hover:text-indigo-600">Settings</Link>
+                <Link href="/dashboard/premium" className="block py-2 text-gray-700 hover:text-indigo-600">Upgrade to Premium</Link>
+                <button onClick={() => signOut({ callbackUrl: '/' })} className="block w-full text-left py-2 text-gray-700 hover:text-red-500">Sign out</button>
+              </motion.div>
+            )}
+          </motion.div>
+        ) : (
+          <>
+            <Link href="/auth/signin" className="text-base text-indigo-600 hover:text-indigo-800 transition-colors">Log In</Link>
+            <Link href="/auth/signin">
+              <motion.button 
+                className="text-base px-5 py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium shadow-lg hover:shadow-xl transition-all"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.97 }}
               >
-                Your Profile
-              </Link>
-              <Link
-                href="/dashboard/settings"
-                className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
-              >
-                Settings
-              </Link>
-              <Link
-                href="/dashboard/premium"
-                className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
-              >
-                Upgrade to Premium
-              </Link>
-              <button
-                onClick={() => signOut({ callbackUrl: '/' })}
-                className="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-gray-700 hover:bg-gray-100"
-              >
-                Sign out
-              </button>
-            </div>
-          </div>
+                Sign Up
+              </motion.button>
+            </Link>
+          </>
         )}
       </div>
-    </nav>
+    </motion.nav>
   )
 } 

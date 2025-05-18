@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
+import dynamic from 'next/dynamic'
 
 export default function Home() {
   const fadeIn = {
@@ -34,13 +35,22 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-[#020B34] text-white overflow-hidden">
+    <main className="flex min-h-screen flex-col bg-transparent text-gray-900 overflow-hidden relative">
       {/* Background effects */}
-      <div className="absolute inset-0 bg-[#020B34]">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#102060] via-[#020B34] to-[#200030] opacity-80"></div>
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid-pattern.svg')] opacity-20"></div>
-        <div className="absolute -top-40 -left-40 w-[30rem] h-[30rem] rounded-full bg-purple-800 filter blur-[100px] opacity-20"></div>
-        <div className="absolute top-1/3 -right-40 w-[30rem] h-[30rem] rounded-full bg-blue-600 filter blur-[100px] opacity-20"></div>
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-indigo-50 to-purple-50 opacity-90"></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          {/* Example animated SVG mesh background */}
+          <svg width="100%" height="100%" viewBox="0 0 1440 800" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full opacity-30 animate-pulse">
+            <ellipse cx="720" cy="400" rx="700" ry="300" fill="url(#paint0_radial)" />
+            <defs>
+              <radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientTransform="translate(720 400) scale(700 300)" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#a5b4fc" />
+                <stop offset="1" stopColor="#f3e8ff" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+          </svg>
+        </div>
       </div>
 
       {/* Navbar */}
@@ -195,7 +205,7 @@ export default function Home() {
             variants={staggerContainer}
           >
             <motion.div 
-              className="rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 p-8 hover:bg-white/10 transition-all"
+              className="rounded-2xl bg-white/70 backdrop-blur-sm border border-white/10 p-8 hover:bg-white/80 transition-all"
               variants={cardVariant}
               whileHover={{ y: -5 }}
             >
@@ -209,7 +219,7 @@ export default function Home() {
             </motion.div>
             
             <motion.div 
-              className="rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 p-8 hover:bg-white/10 transition-all"
+              className="rounded-2xl bg-white/70 backdrop-blur-sm border border-white/10 p-8 hover:bg-white/80 transition-all"
               variants={cardVariant}
               whileHover={{ y: -5 }}
             >
@@ -223,7 +233,7 @@ export default function Home() {
             </motion.div>
             
             <motion.div 
-              className="rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 p-8 hover:bg-white/10 transition-all"
+              className="rounded-2xl bg-white/70 backdrop-blur-sm border border-white/10 p-8 hover:bg-white/80 transition-all"
               variants={cardVariant}
               whileHover={{ y: -5 }}
             >
@@ -262,7 +272,7 @@ export default function Home() {
             {testimonials.map((testimonial, index) => (
               <motion.div 
                 key={index}
-                className="rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 p-8 hover:bg-white/10 transition-all"
+                className="rounded-2xl bg-white/70 backdrop-blur-sm border border-white/10 p-8 hover:bg-white/80 transition-all"
                 variants={cardVariant}
                 whileHover={{ y: -5 }}
               >

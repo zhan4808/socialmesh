@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckIcon, XIcon } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface PremiumPlansProps {
   userId?: string
@@ -114,15 +115,13 @@ export default function PremiumPlans({ userId }: PremiumPlansProps) {
 
   return (
     <div className="space-y-12">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {plans.map((plan) => (
-          <div 
+          <motion.div 
             key={plan.id}
-            className={`rounded-lg border ${
-              plan.popular 
-                ? 'border-primary-500 shadow-md' 
-                : 'border-gray-200'
-            } bg-white overflow-hidden`}
+            className={`rounded-2xl border ${plan.popular ? 'border-indigo-500 shadow-2xl' : 'border-gray-200'} bg-white/70 backdrop-blur overflow-hidden transition-shadow`}
+            whileHover={{ y: -6, scale: 1.04 }}
+            whileTap={{ scale: 0.98 }}
           >
             {plan.popular && (
               <div className="bg-primary-500 text-white text-center text-sm font-medium py-1">
@@ -172,11 +171,11 @@ export default function PremiumPlans({ userId }: PremiumPlansProps) {
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
       
-      <div className="rounded-lg bg-gray-50 p-6">
+      <motion.div className="rounded-2xl bg-white/70 backdrop-blur p-8 shadow-2xl" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <h3 className="text-lg font-medium text-gray-900">Need something different?</h3>
         <p className="mt-1 text-sm text-gray-500">
           Contact our sales team for custom plans and enterprise pricing. We can create a tailored solution for your organization.
@@ -189,7 +188,7 @@ export default function PremiumPlans({ userId }: PremiumPlansProps) {
             Contact Sales →
           </a>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 } 

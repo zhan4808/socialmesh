@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import MatchCard from './MatchCard'
 import StatsCard from './StatsCard'
+import { motion } from 'framer-motion'
 
 type Match = {
   id: string
@@ -62,49 +63,46 @@ export default function DashboardContent() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Dashboard</h1>
-      
-      <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <motion.h1 className="mb-8 text-3xl font-bold text-gray-900" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>Dashboard</motion.h1>
+      <motion.div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         {stats.map((stat, index) => (
           <StatsCard key={index} stat={stat} />
         ))}
-      </div>
-      
-      <div className="mb-8">
-        <h2 className="mb-4 text-xl font-semibold text-gray-900">Your Top Matches</h2>
+      </motion.div>
+      <motion.div className="mb-10" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <h2 className="mb-6 text-2xl font-semibold text-gray-900">Your Top Matches</h2>
         {isLoading ? (
           <div className="flex justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary-600"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-500"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {matches.map((match) => (
               <MatchCard key={match.id} match={match} />
             ))}
           </div>
         )}
-      </div>
-      
-      <div>
-        <h2 className="mb-4 text-xl font-semibold text-gray-900">Grow Your Network</h2>
-        <div className="rounded-lg bg-white p-6 shadow">
-          <p className="mb-3 text-gray-600">Complete these actions to improve your matching results:</p>
-          <ul className="space-y-3">
+      </motion.div>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <h2 className="mb-6 text-2xl font-semibold text-gray-900">Grow Your Network</h2>
+        <div className="rounded-2xl bg-white/70 p-8 shadow-2xl backdrop-blur border border-white/30">
+          <p className="mb-4 text-gray-600">Complete these actions to improve your matching results:</p>
+          <ul className="space-y-4">
             <li className="flex items-center">
-              <span className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary-100 text-xs text-primary-800">1</span>
+              <span className="mr-3 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-sm text-indigo-700 font-bold">1</span>
               <span>Add at least 5 skills to your profile</span>
             </li>
             <li className="flex items-center">
-              <span className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary-100 text-xs text-primary-800">2</span>
+              <span className="mr-3 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-sm text-indigo-700 font-bold">2</span>
               <span>Specify your networking goals</span>
             </li>
             <li className="flex items-center">
-              <span className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary-100 text-xs text-primary-800">3</span>
+              <span className="mr-3 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-sm text-indigo-700 font-bold">3</span>
               <span>Complete your work experience</span>
             </li>
           </ul>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 } 

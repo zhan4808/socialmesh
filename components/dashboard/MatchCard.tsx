@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 
 type MatchProps = {
   match: {
@@ -16,8 +17,12 @@ type MatchProps = {
 
 export default function MatchCard({ match }: MatchProps) {
   return (
-    <div className="overflow-hidden rounded-lg bg-white shadow">
-      <div className="p-5">
+    <motion.div
+      className="overflow-hidden rounded-2xl bg-white/70 backdrop-blur shadow-2xl hover:shadow-3xl transition-shadow border border-white/30"
+      whileHover={{ y: -4, scale: 1.03 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <div className="p-6">
         <div className="flex items-center">
           <div className="relative h-16 w-16 flex-shrink-0">
             <Image
@@ -61,7 +66,7 @@ export default function MatchCard({ match }: MatchProps) {
         </div>
       </div>
       
-      <div className="flex border-t border-gray-200 divide-x divide-gray-200">
+      <div className="flex border-t border-gray-200 divide-x divide-gray-200 bg-white/60">
         <Link
           href={`/dashboard/matches/${match.id}`}
           className="flex flex-1 items-center justify-center py-3 text-sm font-medium text-primary-600 hover:bg-primary-50"
@@ -75,6 +80,6 @@ export default function MatchCard({ match }: MatchProps) {
           Connect
         </Link>
       </div>
-    </div>
+    </motion.div>
   )
 } 
