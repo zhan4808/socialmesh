@@ -62,7 +62,7 @@ export default function DashboardContent() {
   ]
 
   return (
-    <div>
+    <div className="container mx-auto max-w-5xl px-4">
       <motion.h1 className="mb-8 text-3xl font-bold text-gray-900" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>Dashboard</motion.h1>
       <motion.div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         {stats.map((stat, index) => (

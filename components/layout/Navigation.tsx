@@ -25,7 +25,7 @@ export default function Navigation() {
 
   return (
     <motion.nav 
-      className="fixed top-6 left-1/2 z-50 w-[90vw] max-w-5xl -translate-x-1/2 rounded-2xl bg-white/60 backdrop-blur-lg shadow-2xl border border-white/30 flex items-center justify-between px-8 py-4"
+      className="fixed top-6 left-1/2 z-50 w-[90vw] max-w-5xl -translate-x-1/2 rounded-2xl bg-white/60 backdrop-blur-lg shadow-2xl border border-white/30 flex items-center justify-between px-8 py-4 container mx-auto max-w-5xl px-4"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}

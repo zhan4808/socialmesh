@@ -114,7 +114,7 @@ export default function PremiumPlans({ userId }: PremiumPlansProps) {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="container mx-auto max-w-4xl px-4 space-y-12">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {plans.map((plan) => (
           <motion.div 

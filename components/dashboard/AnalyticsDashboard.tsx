@@ -54,7 +54,7 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
   }, [userId])
 
   return (
-    <div className="space-y-10">
+    <div className="container mx-auto max-w-5xl px-4 space-y-10">
       {/* Tabs */}
       <motion.div className="border-b border-gray-200 bg-white/70 backdrop-blur rounded-2xl px-4 py-2 shadow" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
         <nav className="-mb-px flex space-x-6">
