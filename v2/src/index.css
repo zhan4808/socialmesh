@@ -1,0 +1,222 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 260 70% 73%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  * {
+    @apply border-border selection:bg-nexus-purple/30 selection:text-white;
+  }
+  
+  body {
+    @apply bg-nexus-dark text-foreground antialiased;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+}
+
+@layer utilities {
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-br from-nexus-purple via-nexus-purple-light to-nexus-blue bg-clip-text text-transparent;
+  }
+  
+  .bg-gradient {
+    @apply bg-gradient-to-br from-nexus-purple to-nexus-blue;
+  }
+  
+  .border-gradient {
+    border-image: linear-gradient(to right, theme('colors.nexus.purple'), theme('colors.nexus.blue')) 1;
+  }
+  
+  .card-shine {
+    --shine-degree: 45deg;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .card-shine::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+      var(--shine-degree),
+      transparent,
+      rgba(255, 255, 255, 0.05) 45%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 55%,
+      transparent
+    );
+    transform: translateX(-100%);
+    transition: transform 1s;
+  }
+  
+  .card-shine:hover::before {
+    transform: translateX(100%);
+  }
+  
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(155, 135, 245, 0.3);
+  }
+  
+  .glow-subtle {
+    box-shadow: 0 0 8px rgba(155, 135, 245, 0.3);
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Network visualization animations - enhanced */
+  .animate-network-pulse {
+    animation: network-pulse 4s ease-in-out infinite;
+  }
+
+  .animate-network-flow {
+    animation: network-flow 3s linear infinite;
+  }
+
+  /* Enhanced transitions for platform nodes */
+  .platform-node-group {
+    transition: transform 1.5s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .secondary-node {
+    transition: transform 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .main-connection {
+    transition: d 1.5s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .you-node-group {
+    transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* Platform glow */
+  .platform-glow {
+    animation: platform-pulse 3s ease-in-out infinite;
+    animation-delay: var(--pulse-delay, 0s);
+  }
+
+  /* Floating animation for nodes */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+    animation-delay: var(--float-delay, 0s);
+  }
+}
+
+@keyframes network-pulse {
+  0% {
+    r: 28;
+    opacity: 0.7;
+  }
+  50% {
+    r: 34;
+    opacity: 0.4;
+  }
+  100% {
+    r: 28;
+    opacity: 0.7;
+  }
+}
+
+@keyframes platform-pulse {
+  0% {
+    r: 24;
+    opacity: 0.7;
+  }
+  50% {
+    r: 28;
+    opacity: 0.4;
+  }
+  100% {
+    r: 24;
+    opacity: 0.7;
+  }
+}
+
+@keyframes network-flow {
+  0% {
+    stroke-dashoffset: 50;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
