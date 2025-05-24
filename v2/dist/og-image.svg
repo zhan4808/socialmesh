@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0F0F1A"/>
+      <stop offset="100%" style="stop-color:#1A1A2E"/>
+    </linearGradient>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9B87F5"/>
+      <stop offset="100%" style="stop-color:#6A8FFF"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  
+  <!-- Network pattern background -->
+  <g opacity="0.1">
+    <circle cx="200" cy="150" r="3" fill="#9B87F5"/>
+    <circle cx="400" cy="200" r="3" fill="#6A8FFF"/>
+    <circle cx="800" cy="180" r="3" fill="#9B87F5"/>
+    <circle cx="1000" cy="120" r="3" fill="#6A8FFF"/>
+    <circle cx="300" cy="450" r="3" fill="#9B87F5"/>
+    <circle cx="700" cy="500" r="3" fill="#6A8FFF"/>
+    <circle cx="900" cy="400" r="3" fill="#9B87F5"/>
+    <line x1="200" y1="150" x2="400" y2="200" stroke="#9B87F5" stroke-width="1"/>
+    <line x1="400" y1="200" x2="800" y2="180" stroke="#6A8FFF" stroke-width="1"/>
+    <line x1="800" y1="180" x2="1000" y2="120" stroke="#9B87F5" stroke-width="1"/>
+    <line x1="300" y1="450" x2="700" y2="500" stroke="#6A8FFF" stroke-width="1"/>
+    <line x1="700" y1="500" x2="900" y2="400" stroke="#9B87F5" stroke-width="1"/>
+  </g>
+  
+  <!-- Main logo -->
+  <g transform="translate(100, 200)">
+    <circle cx="60" cy="60" r="50" fill="url(#logoGradient)" stroke="#FFFFFF" stroke-width="3"/>
+    <!-- Network nodes in logo -->
+    <circle cx="45" cy="45" r="4" fill="#FFFFFF" opacity="0.9"/>
+    <circle cx="75" cy="45" r="4" fill="#FFFFFF" opacity="0.9"/>
+    <circle cx="60" cy="60" r="5" fill="#FFFFFF"/>
+    <circle cx="40" cy="80" r="4" fill="#FFFFFF" opacity="0.9"/>
+    <circle cx="80" cy="80" r="4" fill="#FFFFFF" opacity="0.9"/>
+    <!-- Connection lines in logo -->
+    <line x1="45" y1="45" x2="60" y2="60" stroke="#FFFFFF" stroke-width="2" opacity="0.7"/>
+    <line x1="75" y1="45" x2="60" y2="60" stroke="#FFFFFF" stroke-width="2" opacity="0.7"/>
+    <line x1="60" y1="60" x2="40" y2="80" stroke="#FFFFFF" stroke-width="2" opacity="0.7"/>
+    <line x1="60" y1="60" x2="80" y2="80" stroke="#FFFFFF" stroke-width="2" opacity="0.7"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="250" y="280" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="#FFFFFF">
+    Social<tspan fill="url(#logoGradient)">Mesh</tspan>
+  </text>
+  
+  <text x="250" y="340" font-family="Arial, sans-serif" font-size="36" fill="#B8A8F8" opacity="0.9">
+    Connect Your Social Universe
+  </text>
+  
+  <text x="250" y="420" font-family="Arial, sans-serif" font-size="24" fill="#D1D5DB" opacity="0.8">
+    Discover hidden connections, automate your networking,
+  </text>
+  <text x="250" y="450" font-family="Arial, sans-serif" font-size="24" fill="#D1D5DB" opacity="0.8">
+    and build meaningful relationships with AI assistance.
+  </text>
+</svg> 
