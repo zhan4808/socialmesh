@@ -1,5 +1,4 @@
 
-import { useEffect } from 'react';
 import NavBar from '@/components/NavBar';
 import HeroSection from '@/components/HeroSection';
 import FeatureSection from '@/components/FeatureSection';
@@ -7,21 +6,8 @@ import IntegrationSection from '@/components/IntegrationSection';
 import WorkflowVisualization from '@/components/WorkflowVisualization';
 import CallToActionSection from '@/components/CallToActionSection';
 import ParticleBackground from '@/components/ParticleBackground';
-import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
-  const { toast } = useToast();
-  
-  useEffect(() => {
-    // Show welcome toast when component mounts
-    setTimeout(() => {
-      toast({
-        title: "Welcome to SocialMesh",
-        description: "Discover the power of your social connections.",
-        duration: 5000,
-      });
-    }, 2000);
-  }, [toast]);
   
   return (
     <div className="min-h-screen bg-nexus-dark relative">
