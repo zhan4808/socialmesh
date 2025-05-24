@@ -27,8 +27,16 @@ const NavBar: React.FC = () => {
       } rounded-xl py-2 px-4`}>
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <a href="#" className="flex-none">
-            <span className="text-2xl font-bold text-gradient">SocialMesh</span>
+          <a href="#" className="flex-none group">
+            <div className="flex items-center">
+              <span className="text-2xl font-bold tracking-tight">
+                <span className="text-white">Social</span>
+                <span className="text-gradient relative">
+                  Mesh
+                  <div className="absolute -top-1 -right-2 w-2 h-2 bg-nexus-purple rounded-full opacity-80 animate-pulse"></div>
+                </span>
+              </span>
+            </div>
           </a>
           
           {/* Center Nav Links - Desktop */}
@@ -52,7 +60,7 @@ const NavBar: React.FC = () => {
               Log in
             </a>
             <Button className="rounded-full bg-gradient from-nexus-purple to-nexus-blue hover:opacity-90">
-              Get Early Access
+              Join Waitlist
             </Button>
           </div>
           
@@ -102,7 +110,7 @@ const NavBar: React.FC = () => {
             </a>
             <div className="px-4 pb-2">
               <Button className="rounded-full bg-gradient from-nexus-purple to-nexus-blue hover:opacity-90 w-full">
-                Get Early Access
+                Join Waitlist
               </Button>
             </div>
           </nav>
