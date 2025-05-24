@@ -14,8 +14,8 @@ const Index = () => {
       <ParticleBackground />
       <NavBar />
       <HeroSection />
-      <FeatureSection />
       <WorkflowVisualization />
+      <FeatureSection />
       <IntegrationSection />
       <CallToActionSection />
       
