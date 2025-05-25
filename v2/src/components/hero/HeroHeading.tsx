@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
@@ -169,7 +168,7 @@ const HeroHeading = () => {
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="border-none bg-transparent text-white placeholder-gray-400 focus:ring-0 focus:outline-none flex-1"
+              className="border-none bg-transparent text-white placeholder-gray-400 focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 flex-1"
               required
             />
           </div>
