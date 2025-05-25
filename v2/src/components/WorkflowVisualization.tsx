@@ -68,7 +68,7 @@ const WorkflowVisualization = () => {
     parallelTasks: { height: 440 }, // Increased further to lower merge line start points
     followUp: { height: 356 }
   };
-
+  
   // Animation for network and platform nodes
   useEffect(() => {
     if (!isInView) return;
@@ -312,63 +312,63 @@ const WorkflowVisualization = () => {
               flowProgress={flowProgress} 
               progressRanges={{
                 socialPlatforms: progressRanges.socialPlatforms
-              }}
+              }} 
               dataIntegrationPosition={positions.dataIntegration}
             />
             
             {/* Step 2: Data Integration */}
             <motion.div style={{ opacity: useTransform(flowProgress, [0, 1], [(val: number) => calculateStepOpacity(val, 'dataIntegration'), (val: number) => 1]) }}>
-              <DataIntegrationStep 
-                position={positions.dataIntegration} 
-                flowProgress={flowProgress} 
-                progressRanges={{
-                  dataIntegration: progressRanges.dataIntegration
-                }} 
-              />
+            <DataIntegrationStep 
+              position={positions.dataIntegration} 
+              flowProgress={flowProgress} 
+              progressRanges={{
+                dataIntegration: progressRanges.dataIntegration
+              }} 
+            />
             </motion.div>
             
             {/* Step 3: Network Analysis */}
             <motion.div style={{ opacity: useTransform(flowProgress, [0, 1], [(val: number) => calculateStepOpacity(val, 'networkAnalysis'), (val: number) => 1]) }}>
-              <NetworkAnalysisStep 
-                position={positions.networkAnalysis} 
-                flowProgress={flowProgress} 
-                progressRanges={{
-                  networkAnalysis: progressRanges.networkAnalysis
-                }} 
-              />
+            <NetworkAnalysisStep 
+              position={positions.networkAnalysis} 
+              flowProgress={flowProgress} 
+              progressRanges={{
+                networkAnalysis: progressRanges.networkAnalysis
+              }} 
+            />
             </motion.div>
             
             {/* Step 4: Opportunity Identification */}
             <motion.div style={{ opacity: useTransform(flowProgress, [0, 1], [(val: number) => calculateStepOpacity(val, 'opportunityIdentification'), (val: number) => 1]) }}>
-              <OpportunityStep 
-                position={positions.opportunityIdentification} 
-                flowProgress={flowProgress} 
-                progressRanges={{
-                  opportunityIdentification: progressRanges.opportunityIdentification
-                }} 
-              />
+            <OpportunityStep 
+              position={positions.opportunityIdentification} 
+              flowProgress={flowProgress} 
+              progressRanges={{
+                opportunityIdentification: progressRanges.opportunityIdentification
+              }} 
+            />
             </motion.div>
             
             {/* Step 5: Parallel Tasks - Messaging and Meeting Coordination */}
             <motion.div style={{ opacity: useTransform(flowProgress, [0, 1], [(val: number) => calculateStepOpacity(val, 'parallelTasks'), (val: number) => 1]) }}>
-              <ParallelTasksStep 
-                position={positions.parallelTasks} 
-                flowProgress={flowProgress} 
-                progressRanges={{
-                  parallelTasks: progressRanges.parallelTasks
-                }} 
-              />
+            <ParallelTasksStep 
+              position={positions.parallelTasks} 
+              flowProgress={flowProgress} 
+              progressRanges={{
+                parallelTasks: progressRanges.parallelTasks
+              }} 
+            />
             </motion.div>
             
             {/* Step 6: Follow-up Management */}
             <motion.div style={{ opacity: useTransform(flowProgress, [0, 1], [(val: number) => calculateStepOpacity(val, 'followUp'), (val: number) => 1]) }}>
-              <FollowUpStep 
-                position={positions.followUp} 
-                flowProgress={flowProgress} 
-                progressRanges={{
-                  followUp: progressRanges.followUp
-                }} 
-              />
+            <FollowUpStep 
+              position={positions.followUp} 
+              flowProgress={flowProgress} 
+              progressRanges={{
+                followUp: progressRanges.followUp
+              }} 
+            />
             </motion.div>
           </div>
         </div>

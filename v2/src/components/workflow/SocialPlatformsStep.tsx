@@ -132,7 +132,7 @@ const SocialPlatformsStep = ({ position, flowProgress, progressRanges, dataInteg
              })}
            </div>
          </div>
-       </div>
+      </div>
     </motion.div>
   );
 };
